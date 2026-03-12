@@ -3,7 +3,7 @@
 //  ★ 업데이트 시 CACHE_VERSION 숫자를 반드시 올려주세요
 // ═══════════════════════════════════════════════════════════════
 
-const CACHE_VERSION = 'v1.0.1';
+const CACHE_VERSION = 'v2.0.0';
 const CACHE_NAME    = `sprinkler-app-${CACHE_VERSION}`;
 
 const LOCAL_FILES = [
@@ -23,9 +23,7 @@ const CDN_FILES = [
     'https://unpkg.com/@babel/standalone/babel.min.js'
 ];
 
-// ═══ 1. INSTALL ═══
 self.addEventListener('install', (event) => {
-    console.log(`[SW] 설치 시작 (${CACHE_VERSION})`);
     event.waitUntil(
         caches.open(CACHE_NAME).then(async (cache) => {
             await cache.addAll(LOCAL_FILES);
@@ -38,7 +36,6 @@ self.addEventListener('install', (event) => {
     self.skipWaiting();
 });
 
-// ═══ 2. ACTIVATE ═══
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((keys) =>
@@ -48,7 +45,6 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
-// ═══ 3. FETCH — Cache First ═══
 self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
 

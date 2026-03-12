@@ -18,7 +18,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&family=Noto+Sans+Mono:wght@400;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&family=Noto+Sans+Mono:wght@400;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet"/>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -77,9 +77,9 @@ const BASE_HEAD_TYPES = [
 
 const PIPE_CONFIG = {
   SCH10:{label:"배관용 탄소강관 KS D3507 (백관)",        shortLabel:"KS D3507",       C:120,
-         inner:{25:27.5,32:36.2,40:42.1,50:53.2,65:69.0,80:81.0,100:105.3,125:130.1,150:155.5,200:204.6}},
+         inner:{25:27.6,32:36.2,40:42.1,50:53.2,65:69.0,80:81.0,100:105.3,125:130.1,150:155.5,200:204.6}},
   SCH40:{label:"압력 배관용 탄소강관 KS D 3562 (흑관)",  shortLabel:"KS D3562",       C:120,
-         inner:{25:27.2,32:35.5,40:41.2,50:52.7,65:65.9,80:78.1,100:102.3,125:126.6,150:151.0,200:199.9}},
+         inner:{25:26.6,32:35.1,40:40.9,50:52.5,65:62.7,80:77.9,100:102.3,125:128.2,150:154.1,200:202.7}},
   STS:  {label:"배관용 스테인리스강관 KS D 3595",        shortLabel:"STS(스테인리스)",C:150,
          inner:{25:27.6,32:36.8,40:42.8,50:54.8,65:70.0,80:85.0,100:108.2,125:133.4,150:160.0,200:210.0}},
   CPVC: {label:"내식성 CPVC관 (소방용)",                shortLabel:"CPVC",           C:150,
@@ -233,6 +233,7 @@ function App(){
     customN:10,          // 직접입력 (baseType=CUSTOM일 때)
     actualHead:78,       // 실양정 h1 (m)
     pumpDia:100,         // 펌프 토출구경
+    pumpEff:60,          // 펌프 효율 (%) — 직접 선택
     transType:"1",       // 전달방식
     pipeType:"SCH10",    // 배관 종류
     branchVelLimit:6,    // 가지배관 유속 상한 (m/s)
@@ -297,7 +298,7 @@ function App(){
     const Jraw=E+F+G+I;
     const J=Math.ceil(Jraw);           // 전양정 (올림)
 
-    const N=PUMP_EFF[sys.pumpDia]||0.60;
+    const N=sys.pumpEff/100;
     const K=TRANS_TYPE[sys.transType]?.k||1.1;
     const M=Clpm/1000;                  // m³/min
     const Pkw=0.163*M*J*K/N;
@@ -348,8 +349,8 @@ function App(){
               </h1>
               <div style={{fontSize:11,marginTop:8,opacity:0.85,fontFamily:"'Noto Sans KR',sans-serif",letterSpacing:"0.02em"}}>
                 Sprinkler Pump Capacity Calculator · NFPC/NFTC 103 적용 &nbsp;
-                <span style={{color:"#86efac",fontWeight:700}}>
-                  [Developer MANMIN&nbsp;&nbsp;Ver-1.0]
+                <span style={{fontFamily:"'Orbitron',sans-serif",fontWeight:900,fontSize:12,color:"#86efac",letterSpacing:"0.08em",textShadow:"0 0 8px rgba(134,239,172,0.6)"}}>
+                  MANMIN · Ver-2.0
                 </span>
               </div>
             </div>
@@ -423,8 +424,23 @@ function App(){
                 <div>
                   <LabelEl>K. 펌프 토출구경</LabelEl>
                   <Sel val={sys.pumpDia} onChange={v=>ss("pumpDia",parseInt(v))}>
-                    {PUMP_SIZES.map(d=><option key={d} value={d}>{d} A (η={((PUMP_EFF[d]||0.6)*100).toFixed(0)}%)</option>)}
+                    {PUMP_SIZES.map(d=><option key={d} value={d}>{d} A</option>)}
                   </Sel>
+                </div>
+
+                {/* K-1. 펌프 효율 */}
+                <div>
+                  <LabelEl>K-1. 펌프 효율 (η)</LabelEl>
+                  <div style={{display:"flex",alignItems:"center",gap:6}}>
+                    <input type="number" value={sys.pumpEff} min={10} max={80} step={1}
+                      onChange={e=>{const v=Math.min(80,Math.max(10,parseInt(e.target.value)||10));ss("pumpEff",v);}}
+                      style={{width:"100%",padding:"8px 12px",borderRadius:8,border:"1px solid #d1d5db",
+                        background:"white",fontSize:13,fontFamily:"'Noto Sans KR',sans-serif",outline:"none"}}/>
+                    <span style={{fontSize:12,color:"#6b7280",whiteSpace:"nowrap"}}>%</span>
+                  </div>
+                  <div style={{fontSize:10,color:"#6b7280",marginTop:4}}>
+                    참고 구경별 표준: 40A=40% / 50A=45% / 65A=55% / 80A=55% / 100A=60% / 125A=65% / 150A=70%
+                  </div>
                 </div>
 
                 {/* L. 동력전달방식 */}
@@ -544,11 +560,23 @@ function App(){
               <div style={{marginTop:8,padding:"7px 12px",background:"#f0fdf4",border:"1px solid #86efac",borderRadius:8,fontSize:11,color:"#14532d",fontFamily:"'Noto Sans KR',sans-serif"}}>
                 ⚠️ <b>유속 제한 (NFTC 103 §2.5.3.3):</b> 가지배관 ≤ 6 m/s&nbsp;|&nbsp;그 밖의 배관 ≤ 10 m/s — 초과 시 ⚠ 표시
               </div>
+              {/* 관부속 참고 안내 */}
+              <div style={{marginTop:8,padding:"10px 14px",background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:8,fontFamily:"'Noto Sans KR',sans-serif"}}>
+                <div style={{fontSize:11,fontWeight:700,color:"#374151",marginBottom:6}}>【 관부속 상당직관 적용 참고사항 】</div>
+                <ol style={{margin:0,paddingLeft:18,fontSize:10,color:"#6b7280",lineHeight:2}}>
+                  <li>Elbow, Tee는 <b>나사접합</b>을 기준으로 한 것임.&nbsp;&nbsp;(용접의 경우 손실을 더 적게 적용)</li>
+                  <li>Reducer는 <b>45°Elbow</b>와 같다.&nbsp;&nbsp;(다만, 관경이 작은 쪽에 따른다.)</li>
+                  <li>Coupling은 <b>직류 Tee</b>와 같다.</li>
+                  <li>Union, Flange, Socket은 손실수두가 미소하여 <b>생략</b>한다.</li>
+                  <li>Auto Valve(포소화전 설비), Glove Valve는 <b>Ball Valve</b>와 같다.</li>
+                  <li>Alarm Valve, Foot Valve 및 Strainer는 <b>Angle Valve</b>와 같다.</li>
+                </ol>
+              </div>
             </Box>
 
             {/* 하단 개발자 표기 */}
-            <div style={{textAlign:"right",fontSize:10,color:"#94a3b8",letterSpacing:"0.05em",paddingRight:4}}>
-              Developer MANMIN&nbsp;&nbsp;Ver-1.0
+            <div style={{textAlign:"right",fontFamily:"'Orbitron',sans-serif",fontSize:10,fontWeight:700,color:"#94a3b8",letterSpacing:"0.08em",paddingRight:4}}>
+              MANMIN · Ver-2.0
             </div>
           </div>
         )}
@@ -603,7 +631,7 @@ function App(){
                 <Card label="M. 토출량 (Q)" value={f3(C.M)} unit="m³/min" formula={`${C.Clpm} ÷ 1000`}/>
                 <Card label="J. 전양정 (H)" value={C.J} unit="m" formula="앞 계산 결과"/>
                 <Card label="O. 전달계수 (K)" value={C.K} unit="" formula={TRANS_TYPE[sys.transType]?.label}/>
-                <Card label="N. 펌프 효율 (η)" value={ff(C.N*100,0)} unit="%" formula={`${sys.pumpDia}A — η = ${(C.N*100).toFixed(0)}%`}/>
+                <Card label="N. 펌프 효율 (η)" value={ff(C.N*100,0)} unit="%" formula={`${sys.pumpDia}A — η = ${(C.N*100).toFixed(0)}% (직접 선택)`}/>
               </div>
               <div style={{background:"#f8fafc",borderRadius:12,padding:14}}>
                 <div style={{fontFamily:"'Noto Sans Mono',monospace",fontSize:12,color:"#475569",marginBottom:12,padding:"8px 12px",background:"white",borderRadius:8,border:BD}}>
@@ -640,8 +668,8 @@ function App(){
               </div>
             </div>
 
-            <div style={{textAlign:"right",fontSize:10,color:"#94a3b8",letterSpacing:"0.05em",marginTop:6,paddingRight:4}}>
-              Developer MANMIN&nbsp;&nbsp;Ver-1.0
+            <div style={{textAlign:"right",fontFamily:"'Orbitron',sans-serif",fontSize:10,fontWeight:700,color:"#94a3b8",letterSpacing:"0.08em",marginTop:6,paddingRight:4}}>
+              MANMIN · Ver-2.0
             </div>
           </div>
         )}
@@ -743,7 +771,7 @@ function App(){
                 <RRow no="J" label="펌프의 토출측 구경"       value={sys.pumpDia}                     unit="A"       basis="설계 도면 기준"/>
                 <RRow no="K" label="펌프의 전달방식"          value={TRANS_TYPE[sys.transType]?.label} unit=""        basis={`전달계수 K = ${TRANS_TYPE[sys.transType]?.k}`}/>
                 <RRow no="L" label="펌프의 토출량 (Q)"        value={f3(C.M)}                          unit="m³/min"  basis={`L = C ÷ 1,000 = ${C.Clpm} ÷ 1,000`}/>
-                <RRow no="M" label="펌프의 효율 (η)"          value={ff(C.N,2)}                        unit=""        basis={`${sys.pumpDia}A 구경 기준 — η = ${(C.N*100).toFixed(0)}%`}/>
+                <RRow no="M" label="펌프의 효율 (η)"          value={ff(C.N,2)}                        unit=""        basis={`η = ${(C.N*100).toFixed(0)}% (직접 선택)`}/>
                 <RRow no="N" label="전달계수 (K)"             value={C.K}                              unit=""        basis={`${TRANS_TYPE[sys.transType]?.label} 적용`}/>
                 <RRow no="O" label="전동기 출력 (이론값)"     value={f3(C.Pkw)}                        unit="kW"      basis={`P = 0.163 × L × I × N ÷ M = 0.163 × ${f3(C.M)} × ${C.J} × ${C.K} ÷ ${C.N}`}/>
                 <RRow no="P" label="전동기 출력 (채택)"       value={C.Php}                            unit="HP"      basis={`이론: ${f3(C.Pkw)} kW = ${f3(C.Pkw*1.341)} HP → 상위 표준 규격 선정`} hi/>
@@ -787,7 +815,7 @@ function App(){
                 {["STS","CPVC"].includes(sys.pipeType)&&" (내식성 배관 — C=150 적용)"}
               </div>
 
-              <div id="dev-stamp">Developer MANMIN&nbsp;&nbsp;Ver-1.0</div>
+              <div id="dev-stamp" style={{fontFamily:"'Orbitron',sans-serif",fontWeight:700,letterSpacing:"0.08em"}}>MANMIN · Ver-2.0</div>
             </div>
           </div>
         )}
