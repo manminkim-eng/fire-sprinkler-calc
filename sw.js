@@ -1,8 +1,9 @@
 // ═══════════════════════════════════════════════════════════════
 //  Service Worker — 스프링클러설비 펌프 용량 계산서 PWA
+//  ★ 업데이트 시 CACHE_VERSION 숫자를 반드시 올려주세요
 // ═══════════════════════════════════════════════════════════════
 
-const CACHE_VERSION = 'v1.0.0';
+const CACHE_VERSION = 'v1.0.1';
 const CACHE_NAME    = `sprinkler-app-${CACHE_VERSION}`;
 
 const LOCAL_FILES = [
