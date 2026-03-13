@@ -32,8 +32,10 @@ input[type=number]::-webkit-inner-spin-button{opacity:0.5;}
   @page{size:A4 portrait;margin:14mm 12mm 22mm 14mm;}
   body{background:white !important;}
   #no-print{display:none !important;}
+  .no-print{display:none !important;}
   #report-zone{box-shadow:none !important;border:none !important;padding:0 !important;margin:0 !important;border-radius:0 !important;}
   .page-break{page-break-before:always;}
+  .print-section{break-inside:avoid;page-break-inside:avoid;}
   #dev-stamp{display:none !important;}
 }
 #dev-stamp{
@@ -337,7 +339,7 @@ function App(){
     <div style={{minHeight:"100vh",background:"linear-gradient(135deg,#f0fdf4 0%,#f1f5f9 100%)"}}>
 
       {/* ── 헤더 ── */}
-      <div style={{background:"linear-gradient(135deg,#0f4c2e,#15803d,#166534)",color:"white",padding:"20px 0 0"}}>
+      <div className="no-print" style={{background:"linear-gradient(135deg,#0f4c2e,#15803d,#166534)",color:"white",padding:"20px 0 0"}}>
         <div style={{maxWidth:1200,margin:"0 auto",padding:"0 24px"}}>
           <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:16}}>
             <div>
@@ -369,7 +371,7 @@ function App(){
       </div>
 
       {/* ── 요약 바 ── */}
-      <div style={{background:"#0f172a",padding:"10px 0"}}>
+      <div className="no-print" style={{background:"#0f172a",padding:"10px 0"}}>
         <div style={{maxWidth:1200,margin:"0 auto",padding:"0 24px",display:"flex",flexWrap:"wrap",gap:18}}>
           {[["🔢 기준개수",`${C.A} 개`],["📌 토출량",`${C.Clpm} ℓ/min`],["💧 수원",`${f3(C.D)} m³`],
             ["📏 전양정",`${C.J} m`],["⚡ 전동기",`${C.Php} HP`],["🔧 배관마찰",`${f3(C.F)} m`]].map(([l,v])=>(
@@ -385,7 +387,7 @@ function App(){
 
         {/* ════ TAB 0: 데이터 입력 ═══════════════════════════════════ */}
         {tab===0&&(
-          <div style={{display:"grid",gap:18}}>
+          <div className="no-print" style={{display:"grid",gap:18}}>
 
             {/* 프로젝트 정보 */}
             <Box title="프로젝트 정보">
@@ -583,7 +585,7 @@ function App(){
 
         {/* ════ TAB 1: 계산 결과 ═══════════════════════════════════ */}
         {tab===1&&(
-          <div style={{display:"grid",gap:18}}>
+          <div className="no-print" style={{display:"grid",gap:18}}>
 
             <Box title="Ⅱ-1. 수원 용량 산정">
               <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>
@@ -677,7 +679,7 @@ function App(){
         {/* ════ TAB 2: 계산서 출력 ════════════════════════════════ */}
         {tab===2&&(
           <div>
-            <div id="no-print" style={{display:"flex",justifyContent:"flex-end",marginBottom:14}}>
+            <div className="no-print" style={{display:"flex",justifyContent:"flex-end",marginBottom:14}}>
               <button onClick={()=>window.print()} style={{padding:"10px 24px",background:"#15803d",color:"white",border:"none",borderRadius:10,cursor:"pointer",fontWeight:700,fontSize:13,display:"flex",alignItems:"center",gap:8}}>
                 🖨️ 인쇄 / PDF 저장
               </button>
@@ -717,6 +719,17 @@ function App(){
                 <RRow no="G" label="헤드 선단 최소 방수압력 환산수두 (h₃)" value={f3(NOZZLE_HEAD)} unit="m"  basis="0.1 MPa ⇒ 10 m  (NFTC 103 §2.2.1.10)"/>
                 <RRow no="H" label="안전율 (SF = 10%)"                   value={f3(C.I)}        unit="m"  basis={`H = (E+F+G) × 0.1 = ${f3(C.E+C.F+C.G)} × 0.1`}/>
                 <RRow no="I" label="전  양  정"                           value={`${f3(C.Jraw)} → ${C.J}`} unit="m"  basis={`I = E+F+G+H = ${f3(C.Jraw)} m → ${C.J} m (올림 적용)`} hi/>
+              </RSection>
+
+              {/* Ⅱ-3 전동기 */}
+              <RSection title="Ⅱ-3. 전동기 동력 계산">
+                <RRow no="J" label="펌프의 토출측 구경"       value={sys.pumpDia}                     unit="A"       basis="설계 도면 기준"/>
+                <RRow no="K" label="펌프의 전달방식"          value={TRANS_TYPE[sys.transType]?.label} unit=""        basis={`전달계수 K = ${TRANS_TYPE[sys.transType]?.k}`}/>
+                <RRow no="L" label="펌프의 토출량 (Q)"        value={f3(C.M)}                          unit="m³/min"  basis={`L = C ÷ 1,000 = ${C.Clpm} ÷ 1,000`}/>
+                <RRow no="M" label="펌프의 효율 (η)"          value={ff(C.N,2)}                        unit=""        basis={`η = ${(C.N*100).toFixed(0)}% (직접 선택)`}/>
+                <RRow no="N" label="전달계수 (K)"             value={C.K}                              unit=""        basis={`${TRANS_TYPE[sys.transType]?.label} 적용`}/>
+                <RRow no="O" label="전동기 출력 (이론값)"     value={f3(C.Pkw)}                        unit="kW"      basis={`P = 0.163 × L × I × N ÷ M = 0.163 × ${f3(C.M)} × ${C.J} × ${C.K} ÷ ${C.N}`}/>
+                <RRow no="P" label="전동기 출력 (채택)"       value={C.Php}                            unit="HP"      basis={`이론: ${f3(C.Pkw)} kW = ${f3(C.Pkw*1.341)} HP → 상위 표준 규격 선정`} hi/>
               </RSection>
 
               {/* 배관 마찰손실 상세표 */}
@@ -765,17 +778,6 @@ function App(){
                   </tbody>
                 </table>
               </div>
-
-              {/* Ⅱ-3 전동기 */}
-              <RSection title="Ⅱ-3. 전동기 동력 계산">
-                <RRow no="J" label="펌프의 토출측 구경"       value={sys.pumpDia}                     unit="A"       basis="설계 도면 기준"/>
-                <RRow no="K" label="펌프의 전달방식"          value={TRANS_TYPE[sys.transType]?.label} unit=""        basis={`전달계수 K = ${TRANS_TYPE[sys.transType]?.k}`}/>
-                <RRow no="L" label="펌프의 토출량 (Q)"        value={f3(C.M)}                          unit="m³/min"  basis={`L = C ÷ 1,000 = ${C.Clpm} ÷ 1,000`}/>
-                <RRow no="M" label="펌프의 효율 (η)"          value={ff(C.N,2)}                        unit=""        basis={`η = ${(C.N*100).toFixed(0)}% (직접 선택)`}/>
-                <RRow no="N" label="전달계수 (K)"             value={C.K}                              unit=""        basis={`${TRANS_TYPE[sys.transType]?.label} 적용`}/>
-                <RRow no="O" label="전동기 출력 (이론값)"     value={f3(C.Pkw)}                        unit="kW"      basis={`P = 0.163 × L × I × N ÷ M = 0.163 × ${f3(C.M)} × ${C.J} × ${C.K} ÷ ${C.N}`}/>
-                <RRow no="P" label="전동기 출력 (채택)"       value={C.Php}                            unit="HP"      basis={`이론: ${f3(C.Pkw)} kW = ${f3(C.Pkw*1.341)} HP → 상위 표준 규격 선정`} hi/>
-              </RSection>
 
               {/* Ⅱ-4 펌프 선정 결과 */}
               <div style={{border:"2px solid #15803d",borderRadius:8,overflow:"hidden",marginBottom:18}}>
