@@ -29,7 +29,18 @@ input,select,button,td,th,div,span,p,h1,h2,label{font-family:'Noto Sans KR',sans
 input[type=number]::-webkit-inner-spin-button{opacity:0.5;}
 
 @media print{
-  @page{size:A4 portrait;margin:14mm 12mm 22mm 14mm;}
+  @page{
+    size:A4 portrait;
+    margin:14mm 12mm 22mm 14mm;
+    @bottom-right{
+      content:"MANMIN-Ver2.0";
+      font-family:'Orbitron',sans-serif;
+      font-size:8pt;
+      font-weight:700;
+      color:#9ca3af;
+      letter-spacing:0.08em;
+    }
+  }
   body{background:white !important;}
   #no-print{display:none !important;}
   .no-print{display:none !important;}
