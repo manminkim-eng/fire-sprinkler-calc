@@ -1,27 +1,24 @@
 /* ═══════════════════════════════════════════════════════════════
-   스프링클러설비 펌프 계산서 — Service Worker
-   ENGINEER KIM MANMIN · Ver 3.0
-   전략:
-     · 정적 자산  → Cache-First
-     · HTML 페이지 → Network-First (최신 버전 우선 + 오프라인 폴백)
-     · CDN / 폰트  → Stale-While-Revalidate
-     · 구버전 캐시 자동 삭제
+   스프링클러설비 펌프 용량 계산서 — Service Worker
+   NFPC 103 / NFTC 103 기준 | ENGINEER KIM MANMIN
+   전략: Cache-First (로컬 자산) + Network-First (외부 CDN)
    ═══════════════════════════════════════════════════════════════ */
 
-const APP_ID     = 'manmin-sprinkler';
-const CACHE_VER  = 'v3.0';
-const C_STATIC   = `${APP_ID}-static-${CACHE_VER}`;
-const C_DYNAMIC  = `${APP_ID}-dynamic-${CACHE_VER}`;
-const C_FONTS    = `${APP_ID}-fonts-${CACHE_VER}`;
-const ALL_CACHES = [C_STATIC, C_DYNAMIC, C_FONTS];
-const DYN_MAX    = 60;
+const CACHE_NAME   = 'sprinkler-pump-v1.0';
+const CDN_CACHE    = 'sprinkler-pump-cdn-v1.0';
+const OFFLINE_PAGE = './index.html';
 
-/* ── 사전 캐시 핵심 자산 ── */
-const PRECACHE = [
-  './',
+/* ── 앱 셸: 설치 즉시 프리캐시 ─────────────────────────────── */
+const APP_SHELL = [
   './index.html',
   './manifest.json',
+  './icons/icon-72.png',
+  './icons/icon-96.png',
+  './icons/icon-128.png',
+  './icons/icon-144.png',
+  './icons/icon-152.png',
   './icons/icon-192.png',
+  './icons/icon-384.png',
   './icons/icon-512.png',
   './icons/apple-touch-icon.png',
   './icons/favicon-32.png',
@@ -29,166 +26,105 @@ const PRECACHE = [
   './icons/favicon.ico',
 ];
 
-/* ── CDN 호스트 (Stale-While-Revalidate) ── */
-const CDN_HOSTS = [
-  'fonts.googleapis.com',
-  'fonts.gstatic.com',
-  'unpkg.com',
+/* ── CDN 오리진 (Network-First) ─────────────────────────────── */
+const CDN_ORIGINS = [
+  'https://fonts.googleapis.com',
+  'https://fonts.gstatic.com',
+  'https://cdn.jsdelivr.net',
+  'https://cdnjs.cloudflare.com',
+  'https://unpkg.com',
 ];
 
-/* ════════════════════════
-   INSTALL
-════════════════════════ */
-self.addEventListener('install', e => {
-  console.log(`[SW ${CACHE_VER}] install`);
-  e.waitUntil(
-    caches.open(C_STATIC)
-      .then(c => c.addAll(PRECACHE))
-      .then(() => self.skipWaiting())
+/* ══════════════════════════════════════════════════════════════
+   INSTALL — 앱 셸 프리캐시
+   ══════════════════════════════════════════════════════════════ */
+self.addEventListener('install', (event) => {
+  console.log('[SW] Install — 프리캐시 시작');
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(APP_SHELL))
+      .then(() => { console.log('[SW] 프리캐시 완료'); return self.skipWaiting(); })
+      .catch((err) => { console.warn('[SW] 일부 실패:', err); return self.skipWaiting(); })
   );
 });
 
-/* ════════════════════════
-   ACTIVATE — 구버전 삭제
-════════════════════════ */
-self.addEventListener('activate', e => {
-  console.log(`[SW ${CACHE_VER}] activate`);
-  e.waitUntil(
+/* ══════════════════════════════════════════════════════════════
+   ACTIVATE — 구버전 캐시 삭제
+   ══════════════════════════════════════════════════════════════ */
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(
-        keys
-          .filter(k => k.startsWith(APP_ID) && !ALL_CACHES.includes(k))
-          .map(k => { console.log(`[SW] 구버전 삭제: ${k}`); return caches.delete(k); })
+      .then((keys) => Promise.all(
+        keys.filter((k) => ![CACHE_NAME, CDN_CACHE].includes(k))
+            .map((k) => { console.log('[SW] 구버전 삭제:', k); return caches.delete(k); })
       ))
       .then(() => self.clients.claim())
   );
 });
 
-/* ════════════════════════
-   FETCH
-════════════════════════ */
-self.addEventListener('fetch', e => {
-  const req = e.request;
-  const url = new URL(req.url);
+/* ══════════════════════════════════════════════════════════════
+   FETCH — 요청 라우팅
+   ══════════════════════════════════════════════════════════════ */
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  if (request.method !== 'GET') return;
+  if (!request.url.startsWith('http')) return;
 
-  if (req.method !== 'GET') return;
-  if (!['http:', 'https:'].includes(url.protocol)) return;
-
-  /* CDN → Stale-While-Revalidate */
-  if (CDN_HOSTS.some(h => url.hostname.includes(h))) {
-    e.respondWith(swrStrategy(req, C_FONTS));
-    return;
-  }
-
-  /* HTML 탐색 → Network-First */
-  if (req.mode === 'navigate') {
-    e.respondWith(networkFirst(req));
-    return;
-  }
-
-  /* 정적 자산 → Cache-First */
-  e.respondWith(cacheFirst(req));
+  const url = new URL(request.url);
+  const isCDN = CDN_ORIGINS.some(
+    (o) => url.origin === new URL(o).origin || request.url.startsWith(o)
+  );
+  event.respondWith(isCDN ? networkFirstCDN(request) : cacheFirstLocal(request));
 });
 
-/* ── Cache-First ── */
-async function cacheFirst(req) {
-  const hit = await caches.match(req);
-  if (hit) return hit;
+/* ── Cache-First (로컬 자산) ─────────────────────────────────── */
+async function cacheFirstLocal(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
   try {
-    const res = await fetch(req);
-    if (res.ok) await putCache(C_DYNAMIC, req, res.clone());
+    const res = await fetch(request);
+    if (res && res.status === 200 && res.type !== 'opaque')
+      (await caches.open(CACHE_NAME)).put(request, res.clone());
     return res;
-  } catch {
-    return new Response('오프라인 상태입니다.', {
-      status: 503,
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-    });
+  } catch (_) {
+    if (request.headers.get('accept')?.includes('text/html')) {
+      const offline = await caches.match(OFFLINE_PAGE);
+      if (offline) return offline;
+    }
+    return new Response('오프라인 상태입니다. 앱을 먼저 온라인에서 한 번 열어주세요.',
+      { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
   }
 }
 
-/* ── Network-First (HTML) ── */
-async function networkFirst(req) {
+/* ── Network-First (CDN 자산) ────────────────────────────────── */
+async function networkFirstCDN(request) {
   try {
-    const res = await fetch(req);
-    if (res.ok) await putCache(C_STATIC, req, res.clone());
+    const res = await fetch(request);
+    if (res && res.status === 200) (await caches.open(CDN_CACHE)).put(request, res.clone());
     return res;
-  } catch {
-    const hit = await caches.match(req) || await caches.match('./index.html');
-    return hit || new Response(offlinePage(), {
-      status: 200,
-      headers: { 'Content-Type': 'text/html;charset=utf-8' }
-    });
+  } catch (_) {
+    return (await caches.match(request, { cacheName: CDN_CACHE })) || new Response('', { status: 503 });
   }
 }
 
-/* ── Stale-While-Revalidate ── */
-async function swrStrategy(req, cacheName) {
-  const cache  = await caches.open(cacheName);
-  const cached = await cache.match(req);
-  const fetchP = fetch(req).then(res => {
-    if (res.ok) cache.put(req, res.clone());
-    return res;
-  }).catch(() => null);
-  return cached || fetchP;
-}
+/* ══════════════════════════════════════════════════════════════
+   MESSAGE — SKIP_WAITING (type / action 양쪽 호환)
+   ══════════════════════════════════════════════════════════════ */
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING' || event.data?.action === 'SKIP_WAITING')
+    self.skipWaiting();
+  if (event.data?.action === 'CLEAR_CACHE')
+    caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))));
+});
 
-/* ── 캐시 저장 + 크기 관리 ── */
-async function putCache(cacheName, req, res) {
-  const cache = await caches.open(cacheName);
-  await cache.put(req, res);
-  const keys = await cache.keys();
-  if (keys.length > DYN_MAX) await cache.delete(keys[0]);
-}
-
-/* ── 오프라인 폴백 HTML ── */
-function offlinePage() {
-  return `<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>오프라인 — 스프링클러 계산서</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Noto Sans KR',sans-serif;background:#15803d;min-height:100vh;
-  display:flex;align-items:center;justify-content:center;padding:24px;}
-.card{background:white;border-radius:20px;padding:40px 36px;max-width:420px;
-  width:100%;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.3);}
-.icon{font-size:64px;margin-bottom:16px;line-height:1;}
-h1{font-size:20px;font-weight:900;color:#15803d;margin-bottom:8px;}
-p{font-size:13px;color:#6b7280;line-height:1.8;margin-bottom:20px;}
-.badge{display:inline-block;background:#f0fdf4;color:#15803d;
-  border:1px solid #bbf7d0;border-radius:20px;padding:6px 16px;
-  font-size:12px;font-weight:700;margin-bottom:24px;}
-button{background:#15803d;color:white;border:none;border-radius:10px;
-  padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;width:100%;}
-button:active{background:#166534;}
-.footer{margin-top:20px;font-size:10px;color:#9ca3af;
-  font-family:'Courier New',monospace;letter-spacing:0.08em;}
-</style>
-</head>
-<body>
-<div class="card">
-  <div class="icon">📡</div>
-  <h1>인터넷 연결 없음</h1>
-  <div class="badge">오프라인 모드</div>
-  <p>네트워크 연결을 확인해 주세요.<br/>연결이 복구되면 자동으로 최신 버전이 로드됩니다.</p>
-  <button onclick="location.reload()">🔄 다시 시도</button>
-  <div class="footer">ENGINEER KIM MANMIN · Ver 3.0</div>
-</div>
-</body>
-</html>`;
-}
-
-/* ════════════════════════
-   MESSAGE — 클라이언트 통신
-════════════════════════ */
-self.addEventListener('message', e => {
-  if (e.data?.type === 'SKIP_WAITING')  self.skipWaiting();
-  if (e.data?.type === 'GET_VERSION')
-    e.ports[0]?.postMessage({ version: CACHE_VER, caches: ALL_CACHES });
-  if (e.data?.type === 'CLEAR_CACHE')
-    caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k.startsWith(APP_ID)).map(k => caches.delete(k))))
-      .then(() => e.ports[0]?.postMessage({ cleared: true }));
+/* ══════════════════════════════════════════════════════════════
+   PUSH — 알림 확장용 (현재 미사용)
+   ══════════════════════════════════════════════════════════════ */
+self.addEventListener('push', (event) => {
+  const data = event.data?.json() ?? { title: '스프링클러 계산서', body: '업데이트가 있습니다.' };
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body, icon: './icons/icon-192.png', badge: './icons/icon-72.png',
+    })
+  );
 });

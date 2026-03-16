@@ -6,7 +6,26 @@
 <title>스프링클러설비 펌프 용량 계산서</title>
 
 <!-- ═══ PWA 설정 ═══ -->
-<link rel="manifest" href="manifest.json"/>
+<link rel="manifest" href="manifest.json" id="pwa-manifest"/>
+<script>
+/* 홈화면 바로가기 이름을 "스프링클러"로 강제 설정 */
+(function(){
+  var m={
+    name:"스프링클러설비 펌프 용량 계산서",
+    short_name:"스프링클러",
+    start_url:"./",display:"standalone",
+    background_color:"#f0fdf4",theme_color:"#15803d",
+    icons:[
+      {src:"icons/icon-192.png",sizes:"192x192",type:"image/png",purpose:"any maskable"},
+      {src:"icons/icon-512.png",sizes:"512x512",type:"image/png",purpose:"any maskable"}
+    ]
+  };
+  try{
+    var blob=new Blob([JSON.stringify(m)],{type:"application/manifest+json"});
+    document.getElementById("pwa-manifest").href=URL.createObjectURL(blob);
+  }catch(e){}
+})();
+</script>
 <meta name="theme-color" content="#15803d"/>
 <meta name="description" content="스프링클러설비 펌프 용량 계산서 - NFPC 103 / NFTC 103 기준 소방시설 설계 전용"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -136,6 +155,71 @@ input[type=number]::-webkit-inner-spin-button{opacity:0.5;}
   from{transform:translateY(100%);opacity:0;}
   to{transform:translateY(0);opacity:1;}
 }
+
+/* ═══ A4 계산서 반응형 미리보기 ═══
+   transform-origin:0 0 + translateX(lOff)scale(s):
+   ① 794px(A4폭) 좌상단 기준 축소
+   ② lOff = (outerW - 794×s) / 2 → 정확한 중앙 정렬
+   ③ outer.height = inner.scrollHeight×s + 40 → 여러 장 빈공간 없음
+   인쇄 시 CSS @media print → transform:none 복원              */
+.rpt-outer{
+  width:100%;overflow:hidden;
+  background:#e8f5e9;padding:20px 12px;
+  border-radius:14px;margin-bottom:16px;
+}
+.rpt-inner{
+  width:794px;
+  /* JS: transform-origin:0 0; transform:translateX(N)scale(S) */
+}
+.rpt-hint{
+  display:none;
+  align-items:center;gap:6px;
+  background:#f0fdf4;border:1px solid #86efac;border-radius:8px;
+  padding:8px 13px;font-size:10px;font-weight:600;color:#15803d;
+  margin-bottom:10px;
+}
+@media(max-width:860px){.rpt-hint{display:flex;}}
+@media print{
+  .rpt-outer{background:white!important;padding:0!important;overflow:visible!important;
+    border-radius:0!important;margin:0!important;height:auto!important;}
+  .rpt-inner{transform:none!important;width:auto!important;margin:0!important;}
+  .rpt-hint{display:none!important;}
+}
+
+/* ═══ 배관 구간 테이블 모바일 스크롤 힌트 ═══ */
+.seg-hint{
+  display:none;
+  align-items:center;gap:6px;justify-content:center;
+  font-size:11px;font-weight:700;color:#6b7280;
+  padding:6px 0;
+  background:#f0fdf4;border:1px solid #86efac;
+  border-bottom:none;border-radius:6px 6px 0 0;
+}
+@media(max-width:860px){.seg-hint{display:flex;}}
+
+/* ═══ Box 컴포넌트 — 다크 그린 헤더 바 ═══ */
+.box-hd{
+  color:white;padding:10px 18px;
+  font-size:12px;font-weight:800;letter-spacing:0.04em;
+  display:flex;align-items:center;gap:8px;
+  font-family:'Noto Sans KR',sans-serif;
+}
+.box-bd{padding:18px;}
+@media(max-width:640px){
+  .box-hd{padding:9px 14px!important;font-size:11px!important;}
+  .box-bd{padding:14px 12px!important;}
+}
+
+/* ═══ 메인 외부 래퍼 모바일 패딩 ═══ */
+.main-outer{max-width:1200px;margin:0 auto;padding:24px;}
+@media(max-width:640px){.main-outer{padding:14px 10px 80px;}}
+@media(max-width:420px){.main-outer{padding:12px 8px 80px;}}
+
+/* ═══ 헤더 h1 모바일 ═══ */
+@media(max-width:640px){
+  .hdr-h1{font-size:18px!important;}
+  .hdr-pad{padding:0 14px!important;}
+}
 </style>
 <body>
 <div id="root"></div>
@@ -221,13 +305,17 @@ const SEC_TITLE_STYLE={
 };
 
 /* ═══ 컴포넌트 ══════════════════════════════════════════════ */
-function Box({title,children}){
+/* Box — 다크 그린 헤더 바 + 내부 패딩 카드 */
+function Box({title,accent,children}){
+  const bg=accent||"#15803d";
   return(
-    <div style={{background:"white",borderRadius:14,border:"1px solid #f1f5f9",padding:"18px 20px",boxShadow:"0 1px 4px rgba(0,0,0,0.06)"}}>
-      <div style={{fontSize:11,fontWeight:800,color:"#374151",textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:14,display:"flex",alignItems:"center",gap:8}}>
-        <span style={{color:"#16a34a",fontSize:14}}>◆</span>{title}
+    <div style={{background:"white",borderRadius:12,border:"1px solid #e5e7eb",overflow:"hidden",boxShadow:"0 1px 6px rgba(0,0,0,0.07)"}}>
+      <div className="box-hd" style={{background:`linear-gradient(135deg,${bg},${bg}dd)`}}>
+        <span style={{fontSize:15,opacity:0.85}}>◆</span>{title}
       </div>
-      {children}
+      <div className="box-bd">
+        {children}
+      </div>
     </div>
   );
 }
@@ -464,6 +552,35 @@ function App(){
   const addSeg=()=>setSegs(s=>[...s,mkSeg()]);
   const remSeg=(i)=>setSegs(s=>s.filter((_,idx)=>idx!==i));
 
+  /* ═══ A4 계산서 반응형 스케일링 ═══
+     transform-origin:0 0 + translateX(lOff)scale(s):
+     ① 794px(A4폭)을 좌상단 기준으로 축소
+     ② lOff = (outerW - 794×scale) / 2 → 정확한 중앙 정렬
+     ③ outer.height = inner.scrollHeight×scale+40 → 빈공간·여러장 보정
+     인쇄 시 @media print { transform:none } 으로 원본 A4 복원     */
+  useEffect(()=>{
+    if(tab!==2)return;
+    function scaleRpt(){
+      const outer=document.getElementById('rpt-outer');
+      const inner=document.getElementById('rpt-inner');
+      if(!outer||!inner)return;
+      const A4W=794;
+      const outerW=outer.clientWidth;
+      const scale=Math.min(1,(outerW-24)/A4W);
+      if(scale>=1){
+        inner.style.cssText='width:794px;margin:0 auto;';
+        outer.style.height='auto';
+      }else{
+        const lOff=Math.max(0,(outerW-A4W*scale)/2);
+        inner.style.cssText=`width:794px;transform-origin:0 0;transform:translateX(${lOff}px) scale(${scale});`;
+        outer.style.height=(inner.scrollHeight*scale+40)+'px';
+      }
+    }
+    const t=setTimeout(scaleRpt,120);
+    window.addEventListener('resize',scaleRpt);
+    return()=>{clearTimeout(t);window.removeEventListener('resize',scaleRpt);};
+  },[tab,segs,sys,proj]);
+
   /* ═══ PWA 설치 프롬프트 ═══ */
   const[installPrompt,setInstallPrompt]=useState(null);
   const[showInstallBanner,setShowInstallBanner]=useState(false);
@@ -550,13 +667,13 @@ function App(){
 
       {/* ── 헤더 ── */}
       <div className="no-print" style={{background:"linear-gradient(135deg,#0f4c2e,#15803d,#166534)",color:"white",padding:"20px 0 0"}}>
-        <div style={{maxWidth:1200,margin:"0 auto",padding:"0 24px"}}>
+        <div className="hdr-pad" style={{maxWidth:1200,margin:"0 auto",padding:"0 24px"}}>
           <div className="hdr-row">
             <div>
               <div style={{fontSize:11,fontWeight:600,opacity:0.7,letterSpacing:"0.15em",textTransform:"uppercase",marginBottom:6}}>
                 Sprinkler Equipment
               </div>
-              <h1 style={{fontSize:26,fontWeight:900,letterSpacing:"0.04em",lineHeight:1.2}}>
+              <h1 className="hdr-h1" style={{fontSize:26,fontWeight:900,letterSpacing:"0.04em",lineHeight:1.2}}>
                 스프링클러설비 펌프 용량 계산서
               </h1>
               <div style={{fontSize:11,marginTop:8,opacity:0.85,fontFamily:"'Noto Sans KR',sans-serif",letterSpacing:"0.02em"}}>
@@ -593,14 +710,14 @@ function App(){
       </div>
 
       {/* ── 컨텐츠 ── */}
-      <div style={{maxWidth:1200,margin:"0 auto",padding:"24px"}}>
+      <div className="main-outer">
 
         {/* ════ TAB 0: 데이터 입력 ═══════════════════════════════════ */}
         {tab===0&&(
           <div className="no-print" style={{display:"grid",gap:18}}>
 
             {/* 프로젝트 정보 */}
-            <Box title="프로젝트 정보">
+            <Box title="Ⅰ-0. 프로젝트 정보" accent="#374151">
               <div className="g-proj">
                 <div><LabelEl>공사명</LabelEl><InpText val={proj.name} onChange={v=>sp("name",v)}/></div>
                 <div><LabelEl>설계자</LabelEl><InpText val={proj.designer} onChange={v=>sp("designer",v)}/></div>
@@ -613,7 +730,7 @@ function App(){
             </Box>
 
             {/* 시스템 파라미터 */}
-            <Box title="시스템 파라미터 (NFTC 103 기준)">
+            <Box title="Ⅰ-1. 스프링클러 시스템 파라미터 (NFTC 103 기준)" accent="#15803d">
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(210px,1fr))",gap:14}}>
 
                 {/* A. 기준개수 선택 */}
@@ -689,12 +806,18 @@ function App(){
             </Box>
 
             {/* 배관 구간 */}
-            <Box title="배관 구간 데이터 입력 (Ⅰ-2. 배관 마찰손실)">
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+            <Box title="Ⅰ-2. 배관 구간 데이터 입력 (마찰손실 자동 계산)" accent="#166534">
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,flexWrap:"wrap",gap:8}}>
                 <p style={{fontSize:12,color:"#6b7280"}}>각 구간 유량·관경·직관 길이·관부속 수량 입력 → 손실수두 자동 계산</p>
-                <button onClick={addSeg} style={{padding:"7px 16px",background:"#15803d",color:"white",border:"none",borderRadius:8,cursor:"pointer",fontWeight:700,fontSize:13,fontFamily:"'Noto Sans KR',sans-serif"}}>
+                <button onClick={addSeg} style={{padding:"7px 16px",background:"#15803d",color:"white",border:"none",borderRadius:8,cursor:"pointer",fontWeight:700,fontSize:13,fontFamily:"'Noto Sans KR',sans-serif",flexShrink:0}}>
                   + 구간 추가
                 </button>
+              </div>
+              {/* 모바일 스크롤 안내 (860px 이하에서만 표시) */}
+              <div className="seg-hint">
+                <span style={{fontSize:14}}>←</span>
+                <span>좌우로 스크롤하여 모든 항목 입력</span>
+                <span style={{fontSize:14}}>→</span>
               </div>
               <div className="tbl-wrap">
                 <table style={{width:"100%",borderCollapse:"collapse",fontSize:11,tableLayout:"fixed",minWidth:900}}>
@@ -797,7 +920,7 @@ function App(){
         {tab===1&&(
           <div className="no-print" style={{display:"grid",gap:18}}>
 
-            <Box title="Ⅱ-1. 수원 용량 산정">
+            <Box title="Ⅱ-1. 수원 용량 산정" accent="#166534">
               <div className="g-4">
                 <Card label="A. 기준개수" value={C.A} unit="개" formula={C.btype.label.split("—")[0].trim()} badge="NFTC §2.1.1.1" bc="green"/>
                 <Card label="B. 헤드 1개당 방사량" value={FLOW_PER_HEAD} unit="ℓ/min" formula="고정 기준값 (NFTC §2.2.1.11)" badge="기준값" bc="blue"/>
@@ -806,7 +929,7 @@ function App(){
               </div>
             </Box>
 
-            <Box title="Ⅱ-2. 펌프 양정 계산">
+            <Box title="Ⅱ-2. 펌프 양정 계산" accent="#14532d">
               <div className="g-2">
                 <div className="g-2sm">
                   <Card label="E. 실양정 (h₁)" value={f1(C.E)} unit="m" formula="흡입+토출 양정"/>
@@ -838,7 +961,7 @@ function App(){
               </div>
             </Box>
 
-            <Box title="Ⅱ-3. 전동기 동력 계산">
+            <Box title="Ⅱ-3. 전동기 동력 계산" accent="#15803d">
               <div className="g-4" style={{marginBottom:14}}>
                 <Card label="M. 토출량 (Q)" value={f3(C.M)} unit="m³/min" formula={`${C.Clpm} ÷ 1000`}/>
                 <Card label="J. 전양정 (H)" value={C.J} unit="m" formula="앞 계산 결과"/>
@@ -889,11 +1012,22 @@ function App(){
         {/* ════ TAB 2: 계산서 출력 ════════════════════════════════ */}
         {tab===2&&(
           <div>
+            {/* 모바일 A4 안내 힌트 (860px 이하에서만 표시) */}
+            <div className="rpt-hint no-print">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1"/></svg>
+              A4 전체를 화면 폭에 맞게 자동 축소합니다 · 여러 장 자동 적용 · 인쇄 시 원래 A4 크기로 출력
+            </div>
             <div className="no-print" style={{display:"flex",justifyContent:"flex-end",marginBottom:14}}>
               <button onClick={()=>window.print()} style={{padding:"10px 24px",background:"#15803d",color:"white",border:"none",borderRadius:10,cursor:"pointer",fontWeight:700,fontSize:13,display:"flex",alignItems:"center",gap:8}}>
                 🖨️ 인쇄 / PDF 저장
               </button>
             </div>
+
+            {/* ─ A4 스케일 컨테이너 ─
+                rpt-outer : overflow:hidden + JS가 height 동적 보정
+                rpt-inner : transform-origin:0 0; translateX(lOff)scale(s) */}
+            <div id="rpt-outer" className="rpt-outer">
+              <div id="rpt-inner" className="rpt-inner">
 
             <div id="report-zone" style={{background:"white",borderRadius:14,boxShadow:"0 1px 3px rgba(0,0,0,0.1)",border:"1px solid #e5e7eb",padding:"44px 52px",fontFamily:"'Noto Sans KR',sans-serif"}}>
 
@@ -1028,7 +1162,9 @@ function App(){
               </div>
 
               <div id="dev-stamp" style={{fontFamily:"'Orbitron',sans-serif",fontWeight:700,letterSpacing:"0.08em"}}>MANMIN · Ver-2.0</div>
-            </div>
+            </div>{/* /report-zone */}
+            </div>{/* /rpt-inner */}
+            </div>{/* /rpt-outer */}
           </div>
         )}
 

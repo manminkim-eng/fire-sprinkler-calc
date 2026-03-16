@@ -1,58 +1,33 @@
 {
   "name": "스프링클러설비 펌프 용량 계산서",
   "short_name": "스프링클러",
-  "description": "NFPC/NFTC 103 기반 스프링클러설비 펌프 용량 자동 계산 — 소방시설 설계 전용 PWA",
-  "start_url": "./index.html?source=pwa",
+  "description": "NFPC 103 / NFTC 103 기준 스프링클러설비 펌프 용량 계산서 — ENGINEER KIM MANMIN",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "orientation": "any",
-  "background_color": "#ffffff",
+  "background_color": "#f0fdf4",
   "theme_color": "#15803d",
   "lang": "ko",
-  "dir": "ltr",
   "categories": ["utilities", "productivity"],
-
   "icons": [
-    { "src": "icons/icon-16.png",          "sizes": "16x16",   "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-32.png",          "sizes": "32x32",   "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-48.png",          "sizes": "48x48",   "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-72.png",          "sizes": "72x72",   "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-96.png",          "sizes": "96x96",   "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-128.png",         "sizes": "128x128", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-144.png",         "sizes": "144x144", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-152.png",         "sizes": "152x152", "type": "image/png", "purpose": "any" },
-    { "src": "icons/apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-192.png",         "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-384.png",         "sizes": "384x384", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png",         "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512-maskable.png","sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "icons/icon-72.png",  "sizes": "72x72",   "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-96.png",  "sizes": "96x96",   "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-128.png", "sizes": "128x128", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-144.png", "sizes": "144x144", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-152.png", "sizes": "152x152", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-384.png", "sizes": "384x384", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ],
-
   "shortcuts": [
     {
-      "name": "① 데이터 입력",
-      "short_name": "입력",
-      "description": "스프링클러 파라미터 입력 화면",
-      "url": "./index.html?tab=0&source=shortcut",
-      "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
-    },
-    {
-      "name": "② 계산 결과",
-      "short_name": "결과",
-      "description": "펌프 용량 계산 결과 확인",
-      "url": "./index.html?tab=1&source=shortcut",
-      "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
-    },
-    {
-      "name": "③ 계산서 출력",
-      "short_name": "출력",
-      "description": "A4 계산서 인쇄 / PDF 저장",
-      "url": "./index.html?tab=2&source=shortcut",
+      "name": "새 계산서 작성",
+      "short_name": "새 계산서",
+      "description": "스프링클러 펌프 용량 계산서를 새로 작성합니다",
+      "url": "./index.html",
       "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
     }
   ],
-
-  "prefer_related_applications": false,
-  "launch_handler": { "client_mode": "focus-existing" }
+  "prefer_related_applications": false
 }
