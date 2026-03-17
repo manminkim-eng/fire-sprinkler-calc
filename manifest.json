@@ -1,7 +1,7 @@
 {
   "name": "스프링클러설비 펌프 용량 계산서",
   "short_name": "스프링클러",
-  "description": "NFPC 103 / NFTC 103 기준 스프링클러설비 펌프 용량 계산서 — ENGINEER KIM MANMIN",
+  "description": "NFPC 103 / NFTC 103 / NFTC 604 기준 스프링클러설비 펌프 용량 계산서 — ENGINEER KIM MANMIN",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

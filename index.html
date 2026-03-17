@@ -27,7 +27,7 @@
 })();
 </script>
 <meta name="theme-color" content="#15803d"/>
-<meta name="description" content="스프링클러설비 펌프 용량 계산서 - NFPC 103 / NFTC 103 기준 소방시설 설계 전용"/>
+<meta name="description" content="스프링클러설비 펌프 용량 계산서 - NFPC 103 / NFTC 103 / NFTC 604 기준 소방시설 설계 전용"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <meta name="apple-mobile-web-app-title" content="스프링클러"/>
@@ -53,7 +53,7 @@ input[type=number]::-webkit-inner-spin-button{opacity:0.5;}
     size:A4 portrait;
     margin:14mm 12mm 22mm 14mm;
     @bottom-right{
-      content:"MANMIN-Ver2.0";
+      content:"MANMIN-Ver3.0";
       font-family:'Orbitron',sans-serif;
       font-size:8pt;
       font-weight:700;
@@ -229,8 +229,10 @@ const { useState, useMemo, useEffect } = React;
 /* ═══ 상수 (NFTC 103) ══════════════════════════════════════════ */
 const NOZZLE_HEAD      = 10;          // 헤드 최소 방수압력 0.1 MPa = 10 m
 const FLOW_PER_HEAD    = 80;          // 헤드 1개당 방사량 (ℓ/min)
-const WATER_VOLUME_PER = 1.6;         // 헤드 1개당 수원 용량 (m³)
-const WATER_TIME       = 20;          // 방사 시간 (분)
+// 헤드 1개당 수원 용량(m³)은 buildingFloor에 따라 useMemo 내부에서 동적 산정 (NFTC 604)
+// buildingFloor=1: 1.6 m³ (29층 이하 / 20분)
+// buildingFloor=2: 3.2 m³ (30~49층  / 40분)
+// buildingFloor=3: 4.8 m³ (50층 이상 / 60분)
 
 /* 기준개수 선택 옵션 (Table 2.1.1.1) */
 const BASE_HEAD_TYPES = [
@@ -238,7 +240,7 @@ const BASE_HEAD_TYPES = [
   { key:"A30b",label:"30개 — 지하층 제외 11층 이상 특정소방대상물·지하가·지하역사",           n:30 },
   { key:"A20a",label:"20개 — 공장(그 밖의 것), 복합건축물(그 밖의 것)",                       n:20 },
   { key:"A20b",label:"20개 — 헤드 부착높이 8 m 이상 특정소방대상물",                          n:20 },
-  { key:"A10", label:"10개 — 헤드 부착높이 8 m 미만 특정소방대상물 (일반)",                   n:10 },
+  { key:"A10", label:"10개 — 아파트, 헤드 부착높이 8 m 미만 특정소방대상물 (일반)",                   n:10 },
 ];
 
 const PIPE_CONFIG = {
@@ -465,13 +467,13 @@ function FormulaModal({onClose}){
             <div className="fml-sec-title">🟥 Ⅱ-3. 전동기 동력 계산</div>
             <div className="fml-card" style={{border:"1.5px solid #fecaca",background:"#fef2f2"}}>
               <div style={{fontSize:12,fontWeight:700,color:"#b91c1c",marginBottom:4}}>O. 전동기 이론 출력 (kW)</div>
-              <code className="fml-eq" style={{background:"#fee2e2",color:"#7f1d1d"}}>P = 0.163 × L × I × N ÷ M &nbsp;[kW]</code>
+              <code className="fml-eq" style={{background:"#fee2e2",color:"#7f1d1d"}}>P = 0.163 × Q × H × K ÷ η &nbsp;[kW]</code>
               <div className="fml-note">
                 0.163 : 단위환산 상수 (ρ×g / 60,000)<br/>
-                L : 토출량 (m³/min) = C ÷ 1,000<br/>
-                I : 전양정 (m)<br/>
-                N : 전달계수 — 전동기 직결 1.1 / 전동기 이외 원동기 1.15<br/>
-                M : 펌프 효율 — 40A=0.40 / 65A=0.55 / 100A=0.60 / 150A=0.70
+                Q : 토출량 (m³/min)<br/>
+                H : 전양정 (m)<br/>
+                K : 전달계수 — 전동기 직결 1.1 / 전동기 이외 원동기 1.15<br/>
+                η : 펌프 효율 — 40A=0.40 / 65A=0.55 / 100A=0.60 / 150A=0.70
               </div>
             </div>
             <div className="fml-card">
@@ -508,7 +510,7 @@ function FormulaModal({onClose}){
           </div>
 
           <div style={{textAlign:"center",fontSize:10,color:"#9ca3af",paddingTop:8,borderTop:"1px solid #f1f5f9"}}>
-            NFPC 103 / NFTC 103 [시행 2026.3.1.] · Hazen-Williams Formula · MANMIN Ver-2.0
+            NFPC 103 / NFTC 103 [시행 2026.3.1.] · Hazen-Williams Formula · MANMIN Ver-3.0
           </div>
         </div>
       </div>
@@ -531,6 +533,7 @@ function App(){
   const [sys,setSys]=useState({
     baseType:"A10",      // 기준개수 유형
     customN:10,          // 직접입력 (baseType=CUSTOM일 때)
+    buildingFloor:1,     // 건축물 규모: 1=29층이하, 2=30~49층, 3=50층이상 (NFTC 604)
     actualHead:78,       // 실양정 h1 (m)
     pumpDia:100,         // 펌프 토출구경
     pumpEff:60,          // 펌프 효율 (%) — 직접 선택
@@ -605,7 +608,9 @@ function App(){
     const A=btype.n;
     const B=FLOW_PER_HEAD;
     const Clpm=A*B;                       // 펌프 토출량 (ℓ/min)
-    const D=A*WATER_VOLUME_PER;           // 수원 용량 (m³)
+    // 건축물 규모별 헤드 1개당 수원 용량 동적 산정 (NFTC 604)
+    const waterVolPer = sys.buildingFloor===3 ? 4.8 : sys.buildingFloor===2 ? 3.2 : 1.6;
+    const D=A*waterVolPer;                // 수원 용량 (m³)
 
     const E=sys.actualHead;               // 실양정 h1
     const pCfg=PIPE_CONFIG[sys.pipeType]||PIPE_CONFIG.SCH10;
@@ -633,7 +638,7 @@ function App(){
     const Pkw=0.163*M*J*K/N;
     const Php=nextHP(Pkw);
 
-    return{A,B,Clpm,D,E,F,G,I,Jraw,J,N,K,M,Pkw,Php,pCfg,sdets,btype};
+    return{A,B,Clpm,D,E,F,G,I,Jraw,J,N,K,M,Pkw,Php,pCfg,sdets,btype,waterVolPer};
   },[sys,segs]);
 
   /* 유속 경고 */
@@ -677,9 +682,9 @@ function App(){
                 스프링클러설비 펌프 용량 계산서
               </h1>
               <div style={{fontSize:11,marginTop:8,opacity:0.85,fontFamily:"'Noto Sans KR',sans-serif",letterSpacing:"0.02em"}}>
-                Sprinkler Pump Capacity Calculator · NFPC/NFTC 103 적용 &nbsp;
+                Sprinkler Pump Capacity Calculator · NFPC/NFTC 103 · NFTC 604 적용 &nbsp;
                 <span style={{fontFamily:"'Orbitron',sans-serif",fontWeight:900,fontSize:12,color:"#86efac",letterSpacing:"0.08em",textShadow:"0 0 8px rgba(134,239,172,0.6)"}}>
-                  MANMIN · Ver-2.0
+                  MANMIN · Ver-3.0
                 </span>
               </div>
             </div>
@@ -732,6 +737,19 @@ function App(){
             {/* 시스템 파라미터 */}
             <Box title="Ⅰ-1. 스프링클러 시스템 파라미터 (NFTC 103 기준)" accent="#15803d">
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(210px,1fr))",gap:14}}>
+
+                {/* 건축물 규모 — NFTC 604 고층건축물 연동 */}
+                <div style={{gridColumn:"span 2"}}>
+                  <LabelEl>건축물 규모 (방수시간) — NFTC 604</LabelEl>
+                  <Sel val={sys.buildingFloor} onChange={v=>ss("buildingFloor",parseInt(v))}>
+                    <option value={1}>29층 이하 일반 건축물 (방수시간 20분 · 헤드당 1.6 m³)</option>
+                    <option value={2}>30층 ~ 49층 고층 건축물 (방수시간 40분 · 헤드당 3.2 m³)</option>
+                    <option value={3}>50층 이상 초고층 건축물 (방수시간 60분 · 헤드당 4.8 m³)</option>
+                  </Sel>
+                  <div style={{fontSize:10,color:"#9ca3af",marginTop:4}}>
+                    수원 단위 = 80 ℓ/min × 방수시간(min) ÷ 1,000 (NFTC 604 §2.1.1)
+                  </div>
+                </div>
 
                 {/* A. 기준개수 선택 */}
                 <div style={{gridColumn:"span 2"}}>
@@ -911,7 +929,7 @@ function App(){
 
             {/* 하단 개발자 표기 */}
             <div style={{textAlign:"right",fontFamily:"'Orbitron',sans-serif",fontSize:10,fontWeight:700,color:"#94a3b8",letterSpacing:"0.08em",paddingRight:4}}>
-              MANMIN · Ver-2.0
+              MANMIN · Ver-3.0
             </div>
           </div>
         )}
@@ -925,7 +943,7 @@ function App(){
                 <Card label="A. 기준개수" value={C.A} unit="개" formula={C.btype.label.split("—")[0].trim()} badge="NFTC §2.1.1.1" bc="green"/>
                 <Card label="B. 헤드 1개당 방사량" value={FLOW_PER_HEAD} unit="ℓ/min" formula="고정 기준값 (NFTC §2.2.1.11)" badge="기준값" bc="blue"/>
                 <Card label="C. 펌프 토출량" value={C.Clpm} unit="ℓ/min" formula={`C = ${C.A} × ${FLOW_PER_HEAD}`}/>
-                <Card label="D. 수원 용량" value={f3(C.D)} unit="m³" formula={`D = ${C.A} × 1.6 m³`} badge="필요 저수량" bc="orange"/>
+                <Card label="D. 수원 용량" value={f3(C.D)} unit="m³" formula={`D = ${C.A} × ${C.waterVolPer} m³`} badge="필요 저수량" bc="orange"/>
               </div>
             </Box>
 
@@ -998,13 +1016,13 @@ function App(){
                   ))}
                 </div>
                 <div style={{borderTop:"1px solid rgba(255,255,255,0.15)",marginTop:14,paddingTop:14,textAlign:"center",fontSize:17,fontWeight:900,color:"#4ade80",letterSpacing:"0.05em",fontFamily:"'Noto Sans Mono',monospace"}}>
-                  Q = {f3(C.M)} ㎥/min &nbsp;×&nbsp; H = {C.J} m &nbsp;×&nbsp; P = {C.Php} HP
+                  Q = {f3(C.M)} m³/min &nbsp;×&nbsp; H = {C.J} m &nbsp;×&nbsp; P = {C.Php} HP
                 </div>
               </div>
             </div>
 
             <div style={{textAlign:"right",fontFamily:"'Orbitron',sans-serif",fontSize:10,fontWeight:700,color:"#94a3b8",letterSpacing:"0.08em",marginTop:6,paddingRight:4}}>
-              MANMIN · Ver-2.0
+              MANMIN · Ver-3.0
             </div>
           </div>
         )}
@@ -1053,7 +1071,7 @@ function App(){
                 <RRow no="A" label="스프링클러헤드의 기준개수"       value={C.A}              unit="개"      basis={`NFTC 103 표 2.1.1.1 — ${C.btype.label}`}/>
                 <RRow no="B" label="헤드 1개당 규정 방사량"           value={FLOW_PER_HEAD}    unit="ℓ/min"  basis="NFTC 103 §2.2.1.11 (80 ℓ/min × 0.1 MPa 기준)"/>
                 <RRow no="C" label="펌프의 토출량"                   value={C.Clpm}           unit="ℓ/min"  basis={`C = A × B = ${C.A} × ${FLOW_PER_HEAD}`}/>
-                <RRow no="D" label="수원의 용량"                     value={`${f3(C.D)} (= ${Math.round(C.D*1000)} ℓ)`} unit="m³" basis={`D = A × 1.6 m³ = ${C.A} × 1.6 (NFTC 103 §2.1.1.1)`} hi/>
+                <RRow no="D" label="수원의 용량"                     value={`${f3(C.D)} (= ${Math.round(C.D*1000)} ℓ)`} unit="m³" basis={`D = A × ${C.waterVolPer} m³ = ${C.A} × ${C.waterVolPer} (NFTC 103 §2.1.1.1 / NFTC 604)`} hi/>
               </RSection>
 
               {/* Ⅱ-2 양정 */}
@@ -1144,7 +1162,7 @@ function App(){
                     </tbody>
                   </table>
                   <div style={{textAlign:"center",marginTop:12,fontSize:16,fontWeight:900,color:"#15803d",letterSpacing:"0.04em",borderTop:"1px solid #86efac",paddingTop:12,fontFamily:"'Noto Sans Mono','Noto Sans KR',monospace"}}>
-                    Q = {f3(C.M)} ㎥/min &nbsp;×&nbsp; H = {C.J} m &nbsp;×&nbsp; P = {C.Php} HP
+                    Q = {f3(C.M)} m³/min &nbsp;×&nbsp; H = {C.J} m &nbsp;×&nbsp; P = {C.Php} HP
                   </div>
                 </div>
               </div>
@@ -1154,14 +1172,16 @@ function App(){
                 <b style={{color:"#374151"}}>▣ 적용 법령 및 기준</b><br/>
                 ① 화재안전기준 NFPC 103 (스프링클러설비의 화재안전기준)<br/>
                 ② 화재안전기술기준 NFTC 103 [시행 2026. 3. 1.] [국립소방연구원공고 제2026-8호]<br/>
-                &nbsp;&nbsp;- 제2.1조 (수원): 기준개수 × 1.6 m³ 이상 (표 2.1.1.1)<br/>
+                &nbsp;&nbsp;- 제2.1조 (수원): 기준개수 × {C.waterVolPer} m³ 이상 (표 2.1.1.1){sys.buildingFloor>1?" — NFTC 604 고층건축물 적용":""}<br/>
                 &nbsp;&nbsp;- 제2.2조 (가압송수장치): 방수압 0.1~1.2 MPa, 방수량 80 ℓ/min 이상 (§2.2.1.10~11)<br/>
                 &nbsp;&nbsp;- 제2.5조 (배관): 가지배관 유속 ≤ 6 m/s, 기타 배관 ≤ 10 m/s (§2.5.3.3)<br/>
-                ③ 배관 마찰손실: Hazen-Williams 공식 — {C.pCfg.shortLabel}, C = {C.pCfg.C} 적용
+                {sys.buildingFloor>1&&<>③ 화재안전기술기준 NFTC 604 (고층건축물의 화재안전기술기준)<br/>
+                &nbsp;&nbsp;- 제2.1조 (수원): {sys.buildingFloor===2?"30~49층 — 방수시간 40분 적용 (헤드당 3.2 m³)":"50층 이상 — 방수시간 60분 적용 (헤드당 4.8 m³)"}<br/></>}
+                {sys.buildingFloor>1?"④":"③"} 배관 마찰손실: Hazen-Williams 공식 — {C.pCfg.shortLabel}, C = {C.pCfg.C} 적용
                 {["STS","CPVC"].includes(sys.pipeType)&&" (내식성 배관 — C=150 적용)"}
               </div>
 
-              <div id="dev-stamp" style={{fontFamily:"'Orbitron',sans-serif",fontWeight:700,letterSpacing:"0.08em"}}>MANMIN · Ver-2.0</div>
+              <div id="dev-stamp" style={{fontFamily:"'Orbitron',sans-serif",fontWeight:700,letterSpacing:"0.08em"}}>MANMIN · Ver-3.0</div>
             </div>{/* /report-zone */}
             </div>{/* /rpt-inner */}
             </div>{/* /rpt-outer */}
