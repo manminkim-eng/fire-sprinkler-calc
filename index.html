@@ -53,7 +53,7 @@ input[type=number]::-webkit-inner-spin-button{opacity:0.5;}
     size:A4 portrait;
     margin:14mm 12mm 22mm 14mm;
     @bottom-right{
-      content:"MANMIN-Ver3.0";
+      content:"MANMIN-Ver3.1";
       font-family:'Orbitron',sans-serif;
       font-size:8pt;
       font-weight:700;
@@ -106,6 +106,37 @@ input[type=number]::-webkit-inner-spin-button{opacity:0.5;}
   transition:transform 0.15s,box-shadow 0.15s;
 }
 .formula-fab:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(21,128,61,0.55);}
+
+/* ══ PWA 설치 FAB ══ */
+.pwa-install-fab{
+  position:fixed;bottom:16px;right:16px;z-index:1100;
+  background:linear-gradient(135deg,#1d4ed8 0%,#1e3a8a 100%);
+  color:white;border:none;border-radius:14px;
+  padding:10px 14px;cursor:pointer;
+  box-shadow:0 4px 20px rgba(29,78,216,0.55);
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  line-height:1.3;font-family:'Noto Sans KR',sans-serif;
+  transition:transform 0.15s,box-shadow 0.15s;
+  animation:pwaFabPop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+@keyframes pwaFabPop{
+  from{opacity:0;transform:scale(0.5) rotate(-15deg);}
+  to{opacity:1;transform:scale(1) rotate(0deg);}
+}
+.pwa-install-fab:hover{transform:translateY(-3px) scale(1.05);box-shadow:0 8px 28px rgba(29,78,216,0.70);}
+.pwa-install-fab:active{transform:scale(0.96);}
+.pwa-install-fab-badge{
+  position:absolute;top:-7px;right:-7px;
+  background:#ef4444;color:white;font-size:8px;font-weight:900;
+  width:18px;height:18px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid white;
+  animation:badgePing 2s ease-in-out infinite;
+}
+@keyframes badgePing{
+  0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(239,68,68,0.6);}
+  50%{transform:scale(1.15);box-shadow:0 0 0 5px rgba(239,68,68,0);}
+}
 
 /* ══ 계산식 안내 모달 ══ */
 .fml-overlay{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:12px;}
@@ -601,6 +632,7 @@ function App(){
     if(r.outcome==='accepted')console.log('[PWA] 설치 완료');
     setInstallPrompt(null);setShowInstallBanner(false);
   };
+  const deferredPrompt=installPrompt; /* PWA FAB에서 참조 */
 
   /* ═══ 계산 ══════════════════════════════════════════════ */
   const C=useMemo(()=>{
@@ -1181,7 +1213,7 @@ function App(){
                 {["STS","CPVC"].includes(sys.pipeType)&&" (내식성 배관 — C=150 적용)"}
               </div>
 
-              <div id="dev-stamp" style={{fontFamily:"'Orbitron',sans-serif",fontWeight:700,letterSpacing:"0.08em"}}>MANMIN · Ver-3.0</div>
+              <div id="dev-stamp" style={{fontFamily:"'Orbitron',sans-serif",fontWeight:700,letterSpacing:"0.08em"}}>MANMIN · Ver-3.1</div>
             </div>{/* /report-zone */}
             </div>{/* /rpt-inner */}
             </div>{/* /rpt-outer */}
@@ -1192,11 +1224,21 @@ function App(){
     </div>
 
     {/* ═══ 계산식 안내 FAB ═══ */}
-    <button className="formula-fab no-print" onClick={()=>setShowFormula(true)}>
+    <button className="formula-fab no-print" style={{bottom:90}} onClick={()=>setShowFormula(true)}>
       <span style={{fontSize:20,lineHeight:1}}>📐</span>
       <span style={{fontSize:10,fontWeight:800,letterSpacing:"0.04em"}}>계산식</span>
       <span style={{fontSize:9,opacity:0.8}}>안내</span>
     </button>
+
+    {/* ═══ PWA 설치 FAB ═══ */}
+    {deferredPrompt && (
+      <button className="pwa-install-fab no-print" onClick={handleInstall} aria-label="앱 설치 바로가기">
+        <div className="pwa-install-fab-badge">NEW</div>
+        <span style={{fontSize:20,lineHeight:1}}>📲</span>
+        <span style={{fontSize:10,fontWeight:800,letterSpacing:"0.04em"}}>앱 설치</span>
+        <span style={{fontSize:9,opacity:0.8}}>바로가기</span>
+      </button>
+    )}
 
     {/* ═══ 계산식 안내 모달 ═══ */}
     {showFormula&&<FormulaModal onClose={()=>setShowFormula(false)}/>}
@@ -1204,7 +1246,7 @@ function App(){
     {showInstallBanner && (
       <div style={{position:"fixed",bottom:16,left:16,right:16,zIndex:9999}} className="pwa-install-banner">
         <div style={{borderRadius:16,padding:16,display:"flex",alignItems:"center",gap:12}}>
-          <img src="icons/icon-192.png" style={{width:48,height:48,borderRadius:12,flexShrink:0,boxShadow:"0 4px 12px rgba(0,0,0,0.3)"}} alt="앱"/>
+          <img src="icons/icon-192.png" style={{width:48,height:48,borderRadius:12,flexShrink:0,boxShadow:"0 4px 12px rgba(0,0,0,0.3)"}} alt="스프링클러 앱 아이콘"/>
           <div style={{flex:1,minWidth:0}}>
             <div style={{color:"white",fontSize:13,fontWeight:800}}>홈 화면에 설치하시겠습니까?</div>
             <div style={{color:"#86efac",fontSize:10,fontWeight:600,marginTop:4}}>오프라인에서도 사용 가능합니다</div>
@@ -1224,7 +1266,7 @@ function App(){
 ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 </script>
 
-<!-- ═══ Service Worker Ver 3.0 ═══ -->
+<!-- ═══ Service Worker Ver 3.1 ═══ -->
 <script>
 (function(){
   if(!('serviceWorker' in navigator)) return;
