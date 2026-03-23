@@ -5,7 +5,7 @@
   "start_url": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#0c1120",
+  "background_color": "#f0fdf4",
   "theme_color": "#15803d",
   "lang": "ko",
   "dir": "ltr",
@@ -25,7 +25,7 @@
     {
       "name": "펌프 용량 계산",
       "short_name": "계산 시작",
-      "description": "스프링클러 펌프 용량 계산 바로가기",
+      "description": "스프링클러설비 펌프 용량 계산 바로가기",
       "url": "./?action=calculate",
       "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
     }

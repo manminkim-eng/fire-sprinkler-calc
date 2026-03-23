@@ -3,10 +3,9 @@
    Developer MANMIN · Ver-3.1
 ═══════════════════════════════════════════════════════════════ */
 
-const CACHE_NAME    = 'manmin-sprinkler-v3.1';
-const STATIC_CACHE  = 'manmin-sprinkler-static-v3.1';
+const CACHE_NAME   = 'manmin-sprinkler2-v3.1';
+const STATIC_CACHE = 'manmin-sprinkler2-static-v3.1';
 
-/* ── 선캐싱 파일 목록 ── */
 const PRECACHE_URLS = [
   './',
   './index.html',
@@ -21,7 +20,7 @@ const PRECACHE_URLS = [
 
 /* ── INSTALL ── */
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing sprinkler-v3.1...');
+  console.log('[SW] Installing sprinkler2-v3.1...');
   event.waitUntil(
     caches.open(STATIC_CACHE)
       .then((cache) => cache.addAll(PRECACHE_URLS).catch((e) => console.warn('[SW] Pre-cache 일부 실패:', e)))
