@@ -150,6 +150,14 @@ input[type=number]::-webkit-inner-spin-button{opacity:0.5;}
 .fml-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;margin-bottom:8px;}
 .fml-eq{font-family:'Noto Sans Mono',monospace;font-size:13px;font-weight:700;color:#15803d;background:#f0fdf4;border-radius:6px;padding:6px 10px;margin:6px 0;display:block;word-break:break-all;}
 .fml-note{font-size:10px;color:#6b7280;margin-top:4px;line-height:1.7;}
+/* 계산식 안내 내부 탭 */
+.fml-itabs{display:flex;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex-shrink:0;background:rgba(0,0,0,.20);}
+.fml-itabs::-webkit-scrollbar{display:none;}
+.fml-itab{padding:9px 16px;border:none;background:transparent;color:rgba(255,255,255,.6);font-size:11.5px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;transition:all .15s;flex-shrink:0;}
+.fml-itab:hover:not(.on){color:rgba(255,255,255,.88);}
+.fml-itab.on{color:#fff;border-bottom-color:#4ade80;}
+.fml-panel{display:none;}
+.fml-panel.on{display:block;}
 
 /* ══ 반응형 브레이크포인트 ══ */
 @media(max-width:1024px){
@@ -422,120 +430,255 @@ function RRow({no,label,value,unit,basis,hi}){
 
 /* ═══ 계산식 안내 모달 ═══════════════════════════════════════ */
 function FormulaModal({onClose}){
+  const [itab,setItab]=React.useState('howto');
+  const TABS=[['howto','🗺️ 이용방법'],['source','🟢 수원·토출량'],['head','🟩 펌프 양정'],['power','🟥 전동기 동력'],['pipe','🔩 상당직관·유속']];
   return(
     <div className="fml-overlay" onClick={onClose}>
       <div className="fml-box" onClick={e=>e.stopPropagation()}>
-        <div className="fml-head">
-          <div>
-            <div style={{fontSize:16,fontWeight:900,letterSpacing:"0.04em"}}>📐 계산식 안내</div>
-            <div style={{fontSize:11,opacity:0.8,marginTop:2}}>NFPC/NFTC 103 스프링클러설비 산출 공식 전체</div>
+
+        {/* 헤더 */}
+        <div className="fml-head" style={{paddingBottom:0}}>
+          <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:12}}>
+            <div>
+              <div style={{fontSize:16,fontWeight:900,letterSpacing:"0.04em"}}>📐 계산식 안내</div>
+              <div style={{fontSize:11,opacity:0.8,marginTop:2}}>NFPC/NFTC 103 스프링클러설비 산출 공식 전체 · Ver-3.3</div>
+            </div>
+            <button onClick={onClose} style={{background:"rgba(255,255,255,0.15)",border:"none",color:"white",borderRadius:8,width:34,height:34,fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700}}>✕</button>
           </div>
-          <button onClick={onClose} style={{background:"rgba(255,255,255,0.15)",border:"none",color:"white",borderRadius:8,width:34,height:34,fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700}}>✕</button>
+          {/* 탭 바 */}
+          <div className="fml-itabs">
+            {TABS.map(([k,l])=>(
+              <button key={k} className={`fml-itab${itab===k?' on':''}`} onClick={()=>setItab(k)}>{l}</button>
+            ))}
+          </div>
         </div>
+
         <div className="fml-body">
 
-          {/* Ⅱ-1 수원 */}
-          <div className="fml-sec">
-            <div className="fml-sec-title">🟢 Ⅱ-1. 수원 용량 산정</div>
-            <div className="fml-card">
-              <div style={{fontSize:12,fontWeight:700,color:"#374151",marginBottom:4}}>A. 기준개수 (표 2.1.1.1)</div>
-              <code className="fml-eq">A = 시설 유형·높이·용도별 법정 기준개수 (10 / 20 / 30개)</code>
-              <div className="fml-note">
-                30개 : 공장(특수가연물), 근린생활·판매·운수시설 복합, 지하층 제외 11층 이상, 지하가·지하역사<br/>
-                20개 : 공장(그 밖의 것), 복합건축물(그 밖의 것), 헤드 부착높이 8m 이상<br/>
-                10개 : 헤드 부착높이 8m 미만 특정소방대상물 (일반)
+          {/* ══ 탭: 이용방법 ══ */}
+          <div className={`fml-panel${itab==='howto'?' on':''}`}>
+
+            {/* 상단 배너 */}
+            <div style={{background:"linear-gradient(135deg,#0f4c2e,#15803d,#166534)",borderRadius:13,padding:"16px 18px",marginBottom:16}}>
+              <div style={{fontSize:13,fontWeight:900,color:"#4ade80",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
+                <span style={{fontSize:20}}>🚒</span> 스프링클러설비 펌프 용량 계산서 이용방법
+              </div>
+              <div style={{fontSize:10.5,color:"rgba(255,255,255,.75)",lineHeight:1.7}}>
+                NFPC/NFTC 103 [시행 2026.3.1.] · Hazen-Williams 공식 · MANMIN Ver-3.3<br/>
+                아래 순서대로 입력하면 수원·양정·동력이 자동으로 산출됩니다.
               </div>
             </div>
-            <div className="fml-card">
-              <div style={{fontSize:12,fontWeight:700,color:"#374151",marginBottom:4}}>C. 펌프 토출량 (ℓ/min)</div>
-              <code className="fml-eq">C = A × 80 &nbsp;[ℓ/min]</code>
-              <div className="fml-note">헤드 1개당 규정 방사량 = 80 ℓ/min (NFTC 103 §2.2.1.11 고정값)</div>
+
+            {/* STEP 1 */}
+            <div style={{display:"flex",gap:11,alignItems:"flex-start",background:"#f8fafc",border:"1.5px solid #e2e8f0",borderLeft:"4px solid #15803d",borderRadius:10,padding:"13px 14px",marginBottom:9}}>
+              <div style={{minWidth:30,height:30,background:"linear-gradient(135deg,#15803d,#0f4c2e)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:900,color:"#fff",flexShrink:0,boxShadow:"0 2px 8px rgba(21,128,61,.35)"}}>1</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:12,fontWeight:900,color:"#15803d",marginBottom:5}}>📋 프로젝트 기본 정보 입력</div>
+                <div style={{fontSize:10.5,color:"#374151",lineHeight:1.85}}>
+                  ① <strong>공사명·설계자·날짜</strong>를 입력합니다 — 출력 계산서 상단에 표기됩니다.<br/>
+                  ② 상단 탭에서 <strong>「⚙️ 조건 입력」</strong>을 선택하여 시스템 기본 조건을 설정합니다.<br/>
+                  ③ 모든 입력값은 실시간으로 계산서에 자동 반영됩니다.
+                </div>
+              </div>
             </div>
-            <div className="fml-card">
-              <div style={{fontSize:12,fontWeight:700,color:"#374151",marginBottom:4}}>D. 수원 용량 (m³)</div>
-              <code className="fml-eq">D = A × 1.6 &nbsp;[m³]</code>
-              <div className="fml-note">
-                헤드 1개당 수원 단위 = 1.6 m³ (NFTC 103 §2.1.1.1 표 2.1.1.1)<br/>
-                = 80 ℓ/min × 20 min ÷ 1,000 = 1.6 m³
+
+            {/* STEP 2 */}
+            <div style={{display:"flex",gap:11,alignItems:"flex-start",background:"#f0fdf4",border:"1.5px solid #bbf7d0",borderLeft:"4px solid #16a34a",borderRadius:10,padding:"13px 14px",marginBottom:9}}>
+              <div style={{minWidth:30,height:30,background:"linear-gradient(135deg,#16a34a,#14532d)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:900,color:"#fff",flexShrink:0,boxShadow:"0 2px 8px rgba(22,163,74,.35)"}}>2</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:12,fontWeight:900,color:"#15803d",marginBottom:5}}>🟢 수원 및 토출량 조건 설정</div>
+                <div style={{fontSize:10.5,color:"#374151",lineHeight:1.85}}>
+                  ① <strong>기준개수 유형</strong>을 선택합니다 — 시설 유형·높이·용도별로 10 / 20 / 30개가 자동 결정됩니다.<br/>
+                  ② <strong>건물 층수 규모</strong>(29층↓ / 30~49층 / 50층↑)를 선택하면 NFTC 604 고층 기준이 자동 적용됩니다.<br/>
+                  ③ 펌프 토출량(A × 80 ℓ/min)과 수원 용량(A × 1.6 m³)이 자동 산출됩니다.
+                </div>
+              </div>
+            </div>
+
+            {/* STEP 3 */}
+            <div style={{display:"flex",gap:11,alignItems:"flex-start",background:"#fefce8",border:"1.5px solid #fde047",borderLeft:"4px solid #ca8a04",borderRadius:10,padding:"13px 14px",marginBottom:9}}>
+              <div style={{minWidth:30,height:30,background:"linear-gradient(135deg,#ca8a04,#854d0e)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:900,color:"#fff",flexShrink:0,boxShadow:"0 2px 8px rgba(202,138,4,.35)"}}>3</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:12,fontWeight:900,color:"#854d0e",marginBottom:5}}>🟩 펌프 양정 조건 입력</div>
+                <div style={{fontSize:10.5,color:"#374151",lineHeight:1.85}}>
+                  ① <strong>실양정(m)</strong>을 입력합니다 — 펌프 설치 위치에서 최고층 헤드까지의 높이입니다.<br/>
+                  ② <strong>배관 세그먼트</strong>를 추가하여 관경·길이·관부속 수량을 입력하면 Hazen-Williams 공식으로 마찰손실이 자동 계산됩니다.<br/>
+                  ③ 전양정 = (실양정 + 배관손실 + 헤드 환산수두 10m) × 1.1(안전율) 후 올림 처리됩니다.<br/>
+                  ④ 유속 초과 구간은 <span style={{color:"#dc2626",fontWeight:700}}>⚠ 경고</span>로 자동 표시됩니다(가지 6 m/s, 기타 10 m/s).
+                </div>
+              </div>
+            </div>
+
+            {/* STEP 4 */}
+            <div style={{display:"flex",gap:11,alignItems:"flex-start",background:"#fef2f2",border:"1.5px solid #fecaca",borderLeft:"4px solid #dc2626",borderRadius:10,padding:"13px 14px",marginBottom:9}}>
+              <div style={{minWidth:30,height:30,background:"linear-gradient(135deg,#dc2626,#991b1b)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:900,color:"#fff",flexShrink:0,boxShadow:"0 2px 8px rgba(220,38,38,.35)"}}>4</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:12,fontWeight:900,color:"#b91c1c",marginBottom:5}}>🟥 전동기 동력 조건 설정</div>
+                <div style={{fontSize:10.5,color:"#374151",lineHeight:1.85}}>
+                  ① <strong>펌프 관경(mm)</strong>을 선택합니다 — 관경별 펌프 효율(η)이 자동 설정됩니다.<br/>
+                  ② <strong>전달 방식</strong>(전동기 직결 1.1 / 이외 원동기 1.15)을 선택합니다.<br/>
+                  ③ 이론 출력(kW) → HP 환산 후 <strong>상위 표준 규격</strong>이 자동 선정됩니다.
+                </div>
+              </div>
+            </div>
+
+            {/* STEP 5 */}
+            <div style={{display:"flex",gap:11,alignItems:"flex-start",background:"#eff6ff",border:"1.5px solid #bfdbfe",borderLeft:"4px solid #2563eb",borderRadius:10,padding:"13px 14px",marginBottom:16}}>
+              <div style={{minWidth:30,height:30,background:"linear-gradient(135deg,#2563eb,#1e3a8a)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:900,color:"#fff",flexShrink:0,boxShadow:"0 2px 8px rgba(37,99,235,.35)"}}>5</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:12,fontWeight:900,color:"#1d4ed8",marginBottom:5}}>🖨️ 결과 확인 및 출력</div>
+                <div style={{fontSize:10.5,color:"#374151",lineHeight:1.85}}>
+                  ① <strong>「📄 계산서」 탭</strong>에서 최종 산출 결과를 확인합니다.<br/>
+                  ② 상단 <strong>🖨️ 인쇄 버튼</strong>을 클릭하면 소방 계산서 양식으로 A4 출력·PDF 저장됩니다.<br/>
+                  ③ <strong>「📱 모바일」 탭</strong>에서 JPG로 저장하거나 공유할 수 있습니다.<br/>
+                  ④ PWA 설치: 우측 하단 설치 버튼 또는 iOS Safari → 공유 → 홈 화면에 추가.
+                </div>
+              </div>
+            </div>
+
+            {/* 주요 기능 */}
+            <div className="fml-sec-title" style={{marginTop:0}}>💡 주요 기능 안내</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+              <div className="fml-card" style={{borderLeft:"3px solid #15803d"}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#15803d",marginBottom:4}}>📐 계산식 안내 버튼</div>
+                <div className="fml-note">우측 하단 FAB 버튼을 클릭하면 이 창이 열립니다. 탭을 전환하여 수원·양정·동력·상당직관·유속 계산식을 확인하세요.</div>
+              </div>
+              <div className="fml-card" style={{borderLeft:"3px solid #16a34a"}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#16a34a",marginBottom:4}}>⚡ 실시간 자동 계산</div>
+                <div className="fml-note">모든 입력값 변경 즉시 수원·양정·동력이 실시간 재산출됩니다. 별도 계산 버튼 없이 값만 변경하면 됩니다.</div>
+              </div>
+              <div className="fml-card" style={{borderLeft:"3px solid #ca8a04"}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#ca8a04",marginBottom:4}}>🔩 배관 세그먼트 추가</div>
+                <div className="fml-note">「+ 세그먼트 추가」 버튼으로 구간별 배관을 등록합니다. 관경·길이·관부속 수량 입력 시 마찰손실과 유속이 자동 계산됩니다.</div>
+              </div>
+              <div className="fml-card" style={{borderLeft:"3px solid #dc2626"}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#dc2626",marginBottom:4}}>⚠️ 유속 초과 자동 경고</div>
+                <div className="fml-note">각 세그먼트의 유속이 법적 기준(가지 6 m/s·기타 10 m/s)을 초과하면 빨간 경고가 자동 표시됩니다.</div>
+              </div>
+            </div>
+
+            {/* 법적 근거 */}
+            <div style={{border:"1.5px solid #bbf7d0",background:"#f0fdf4",borderRadius:10,padding:"12px 14px"}}>
+              <div style={{fontSize:11,fontWeight:800,color:"#15803d",marginBottom:6}}>📌 주요 법적 근거</div>
+              <div className="fml-note" style={{fontSize:10.5,lineHeight:2.1}}>
+                <strong>NFPC 103</strong> — 스프링클러설비의 화재안전성능기준 [시행 2026.3.1.]<br/>
+                <strong>NFTC 103 §2.1.1.1</strong> — 기준개수 표 (10 / 20 / 30개), 수원 용량 산정<br/>
+                <strong>NFTC 103 §2.2.1.10~11</strong> — 방수압 0.1 MPa, 방사량 80 ℓ/min<br/>
+                <strong>NFTC 103 §2.5.3.3</strong> — 유속 제한 (가지 6 m/s / 기타 10 m/s)<br/>
+                <strong>Hazen-Williams 공식</strong> — 배관 마찰손실 (C값: 백관 120, STS·CPVC 150)
+              </div>
+            </div>
+
+          </div>
+
+          {/* ══ 탭: 수원·토출량 ══ */}
+          <div className={`fml-panel${itab==='source'?' on':''}`}>
+            <div className="fml-sec">
+              <div className="fml-sec-title">🟢 Ⅱ-1. 수원 용량 산정</div>
+              <div className="fml-card">
+                <div style={{fontSize:12,fontWeight:700,color:"#374151",marginBottom:4}}>A. 기준개수 (표 2.1.1.1)</div>
+                <code className="fml-eq">A = 시설 유형·높이·용도별 법정 기준개수 (10 / 20 / 30개)</code>
+                <div className="fml-note">
+                  30개 : 공장(특수가연물), 근린생활·판매·운수시설 복합, 지하층 제외 11층 이상, 지하가·지하역사<br/>
+                  20개 : 공장(그 밖의 것), 복합건축물(그 밖의 것), 헤드 부착높이 8m 이상<br/>
+                  10개 : 헤드 부착높이 8m 미만 특정소방대상물 (일반)
+                </div>
+              </div>
+              <div className="fml-card">
+                <div style={{fontSize:12,fontWeight:700,color:"#374151",marginBottom:4}}>C. 펌프 토출량 (ℓ/min)</div>
+                <code className="fml-eq">C = A × 80 &nbsp;[ℓ/min]</code>
+                <div className="fml-note">헤드 1개당 규정 방사량 = 80 ℓ/min (NFTC 103 §2.2.1.11 고정값)</div>
+              </div>
+              <div className="fml-card">
+                <div style={{fontSize:12,fontWeight:700,color:"#374151",marginBottom:4}}>D. 수원 용량 (m³)</div>
+                <code className="fml-eq">D = A × 1.6 &nbsp;[m³]</code>
+                <div className="fml-note">
+                  헤드 1개당 수원 단위 = 1.6 m³ (NFTC 103 §2.1.1.1 표 2.1.1.1)<br/>
+                  = 80 ℓ/min × 20 min ÷ 1,000 = 1.6 m³
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Ⅱ-2 양정 */}
-          <div className="fml-sec">
-            <div className="fml-sec-title">🟩 Ⅱ-2. 펌프 양정 계산</div>
-            <div className="fml-card">
-              <div style={{fontSize:12,fontWeight:700,color:"#374151",marginBottom:4}}>E. 실양정 h₁ (m)</div>
-              <code className="fml-eq">E = 흡입양정 + 토출양정 &nbsp;[m]</code>
-              <div className="fml-note">펌프 설치위치에서 최고층 스프링클러 헤드까지의 높이 (설계 도면 기준)</div>
-            </div>
-            <div className="fml-card">
-              <div style={{fontSize:12,fontWeight:700,color:"#374151",marginBottom:4}}>F. 배관 마찰손실 h₂ (m) — Hazen-Williams 공식</div>
-              <code className="fml-eq">h = (10.67 × Q¹·⁸⁵²) ÷ (C¹·⁸⁵² × D⁴·⁸⁷) × L &nbsp;[m]</code>
-              <div className="fml-note">
-                Q : 유량 (m³/s) &nbsp;|&nbsp; C : 유속계수 (배관 종류별) &nbsp;|&nbsp; D : 관 내경 (m)<br/>
-                L : 상당직관 합계 = 직관길이 + 관부속 상당직관 합계 (m)<br/>
-                배관 C값 : KS D3507·KS D3562 = 120 / STS·CPVC = 150
+          {/* ══ 탭: 펌프 양정 ══ */}
+          <div className={`fml-panel${itab==='head'?' on':''}`}>
+            <div className="fml-sec">
+              <div className="fml-sec-title">🟩 Ⅱ-2. 펌프 양정 계산</div>
+              <div className="fml-card">
+                <div style={{fontSize:12,fontWeight:700,color:"#374151",marginBottom:4}}>E. 실양정 h₁ (m)</div>
+                <code className="fml-eq">E = 흡입양정 + 토출양정 &nbsp;[m]</code>
+                <div className="fml-note">펌프 설치위치에서 최고층 스프링클러 헤드까지의 높이 (설계 도면 기준)</div>
               </div>
-            </div>
-            <div className="fml-card">
-              <div style={{fontSize:12,fontWeight:700,color:"#374151",marginBottom:4}}>G. 헤드 최소 방수압 환산수두 h₃ (m)</div>
-              <code className="fml-eq">G = 10 m &nbsp;(고정) &nbsp;← 0.1 MPa = 1.0 kgf/cm² = 10 m</code>
-              <div className="fml-note">NFTC 103 §2.2.1.10: 헤드 방수압 최솟값 0.1 MPa → 수두 10 m 고정</div>
-            </div>
-            <div className="fml-card" style={{border:"1.5px solid #bbf7d0",background:"#f0fdf4"}}>
-              <div style={{fontSize:12,fontWeight:700,color:"#15803d",marginBottom:4}}>I. 전양정 — 최종 결과값</div>
-              <code className="fml-eq" style={{background:"#dcfce7",color:"#14532d"}}>I = (E + F + G) × 1.1 &nbsp;→ 올림(ceil) [m]</code>
-              <div className="fml-note">
-                안전율 10% 가산 : H = (E+F+G) × 0.1<br/>
-                소계 합산 후 올림 : I = ceil(E + F + G + H)
+              <div className="fml-card">
+                <div style={{fontSize:12,fontWeight:700,color:"#374151",marginBottom:4}}>F. 배관 마찰손실 h₂ (m) — Hazen-Williams 공식</div>
+                <code className="fml-eq">h = (10.67 × Q¹·⁸⁵²) ÷ (C¹·⁸⁵² × D⁴·⁸⁷) × L &nbsp;[m]</code>
+                <div className="fml-note">
+                  Q : 유량 (m³/s) &nbsp;|&nbsp; C : 유속계수 (배관 종류별) &nbsp;|&nbsp; D : 관 내경 (m)<br/>
+                  L : 상당직관 합계 = 직관길이 + 관부속 상당직관 합계 (m)<br/>
+                  배관 C값 : KS D3507·KS D3562 = 120 / STS·CPVC = 150
+                </div>
               </div>
-            </div>
-          </div>
-
-          {/* Ⅱ-3 동력 */}
-          <div className="fml-sec">
-            <div className="fml-sec-title">🟥 Ⅱ-3. 전동기 동력 계산</div>
-            <div className="fml-card" style={{border:"1.5px solid #fecaca",background:"#fef2f2"}}>
-              <div style={{fontSize:12,fontWeight:700,color:"#b91c1c",marginBottom:4}}>O. 전동기 이론 출력 (kW)</div>
-              <code className="fml-eq" style={{background:"#fee2e2",color:"#7f1d1d"}}>P = 0.163 × Q × H × K ÷ η &nbsp;[kW]</code>
-              <div className="fml-note">
-                0.163 : 단위환산 상수 (ρ×g / 60,000)<br/>
-                Q : 토출량 (m³/min)<br/>
-                H : 전양정 (m)<br/>
-                K : 전달계수 — 전동기 직결 1.1 / 전동기 이외 원동기 1.15<br/>
-                η : 펌프 효율 — 40A=0.40 / 65A=0.55 / 100A=0.60 / 150A=0.70
+              <div className="fml-card">
+                <div style={{fontSize:12,fontWeight:700,color:"#374151",marginBottom:4}}>G. 헤드 최소 방수압 환산수두 h₃ (m)</div>
+                <code className="fml-eq">G = 10 m &nbsp;(고정) &nbsp;← 0.1 MPa = 1.0 kgf/cm² = 10 m</code>
+                <div className="fml-note">NFTC 103 §2.2.1.10: 헤드 방수압 최솟값 0.1 MPa → 수두 10 m 고정</div>
               </div>
-            </div>
-            <div className="fml-card">
-              <div style={{fontSize:12,fontWeight:700,color:"#374151",marginBottom:4}}>P. 전동기 채택 출력 (HP)</div>
-              <code className="fml-eq">HP (이론) = P(kW) × 1.341 → 상위 표준 규격 선정</code>
-              <div className="fml-note">표준 규격 : 3·5·7.5·10·15·20·25·30·40·50·60·75·100·125·150·200 HP</div>
-            </div>
-          </div>
-
-          {/* 관부속 상당직관 */}
-          <div className="fml-sec">
-            <div className="fml-sec-title">🔩 관부속 상당직관 계산 원리</div>
-            <div className="fml-card">
-              <code className="fml-eq">상당직관(m) = Σ [ 관부속 수량 × 해당 관경의 상당직관 환산값 ]</code>
-              <div className="fml-note">
-                나사 접합 기준 적용 (KS B 6721 준용)<br/>
-                Reducer → 45°Elbow 동일 (관경 小 기준) &nbsp;|&nbsp; Coupling → 직류 Tee 동일<br/>
-                Union / Flange / Socket → 무시 (손실 미소)<br/>
-                Alarm V/V, Foot V/V, Strainer → Angle V/V 동일
+              <div className="fml-card" style={{border:"1.5px solid #bbf7d0",background:"#f0fdf4"}}>
+                <div style={{fontSize:12,fontWeight:700,color:"#15803d",marginBottom:4}}>I. 전양정 — 최종 결과값</div>
+                <code className="fml-eq" style={{background:"#dcfce7",color:"#14532d"}}>I = (E + F + G) × 1.1 &nbsp;→ 올림(ceil) [m]</code>
+                <div className="fml-note">
+                  안전율 10% 가산 : H = (E+F+G) × 0.1<br/>
+                  소계 합산 후 올림 : I = ceil(E + F + G + H)
+                </div>
               </div>
             </div>
           </div>
 
-          {/* 유속 제한 */}
-          <div className="fml-sec">
-            <div className="fml-sec-title">⚡ 유속 제한 기준 (NFTC 103 §2.5.3.3)</div>
-            <div className="fml-card">
-              <code className="fml-eq">가지배관 : v ≤ 6 m/s &nbsp;|&nbsp; 그 밖의 배관 : v ≤ 10 m/s</code>
-              <div className="fml-note">
-                유속 v = Q / A = (Q/60,000) ÷ (π × (Di/2000)²) &nbsp;[m/s]<br/>
-                Q : 유량 (ℓ/min) &nbsp;|&nbsp; Di : 관 내경 (mm)
+          {/* ══ 탭: 전동기 동력 ══ */}
+          <div className={`fml-panel${itab==='power'?' on':''}`}>
+            <div className="fml-sec">
+              <div className="fml-sec-title">🟥 Ⅱ-3. 전동기 동력 계산</div>
+              <div className="fml-card" style={{border:"1.5px solid #fecaca",background:"#fef2f2"}}>
+                <div style={{fontSize:12,fontWeight:700,color:"#b91c1c",marginBottom:4}}>O. 전동기 이론 출력 (kW)</div>
+                <code className="fml-eq" style={{background:"#fee2e2",color:"#7f1d1d"}}>P = 0.163 × Q × H × K ÷ η &nbsp;[kW]</code>
+                <div className="fml-note">
+                  0.163 : 단위환산 상수 (ρ×g / 60,000)<br/>
+                  Q : 토출량 (m³/min)<br/>
+                  H : 전양정 (m)<br/>
+                  K : 전달계수 — 전동기 직결 1.1 / 전동기 이외 원동기 1.15<br/>
+                  η : 펌프 효율 — 40A=0.40 / 65A=0.55 / 100A=0.60 / 150A=0.70
+                </div>
+              </div>
+              <div className="fml-card">
+                <div style={{fontSize:12,fontWeight:700,color:"#374151",marginBottom:4}}>P. 전동기 채택 출력 (HP)</div>
+                <code className="fml-eq">HP (이론) = P(kW) × 1.341 → 상위 표준 규격 선정</code>
+                <div className="fml-note">표준 규격 : 3·5·7.5·10·15·20·25·30·40·50·60·75·100·125·150·200 HP</div>
+              </div>
+            </div>
+          </div>
+
+          {/* ══ 탭: 상당직관·유속 ══ */}
+          <div className={`fml-panel${itab==='pipe'?' on':''}`}>
+            <div className="fml-sec">
+              <div className="fml-sec-title">🔩 관부속 상당직관 계산 원리</div>
+              <div className="fml-card">
+                <code className="fml-eq">상당직관(m) = Σ [ 관부속 수량 × 해당 관경의 상당직관 환산값 ]</code>
+                <div className="fml-note">
+                  나사 접합 기준 적용 (KS B 6721 준용)<br/>
+                  Reducer → 45°Elbow 동일 (관경 小 기준) &nbsp;|&nbsp; Coupling → 직류 Tee 동일<br/>
+                  Union / Flange / Socket → 무시 (손실 미소)<br/>
+                  Alarm V/V, Foot V/V, Strainer → Angle V/V 동일
+                </div>
+              </div>
+            </div>
+            <div className="fml-sec">
+              <div className="fml-sec-title">⚡ 유속 제한 기준 (NFTC 103 §2.5.3.3)</div>
+              <div className="fml-card">
+                <code className="fml-eq">가지배관 : v ≤ 6 m/s &nbsp;|&nbsp; 그 밖의 배관 : v ≤ 10 m/s</code>
+                <div className="fml-note">
+                  유속 v = Q / A = (Q/60,000) ÷ (π × (Di/2000)²) &nbsp;[m/s]<br/>
+                  Q : 유량 (ℓ/min) &nbsp;|&nbsp; Di : 관 내경 (mm)
+                </div>
               </div>
             </div>
           </div>
