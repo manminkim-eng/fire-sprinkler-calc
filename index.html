@@ -53,7 +53,7 @@ input[type=number]::-webkit-inner-spin-button{opacity:0.5;}
     size:A4 portrait;
     margin:14mm 12mm 22mm 14mm;
     @bottom-right{
-      content:"MANMIN-Ver3.3";
+      content:"MANMIN-Ver3.4";
       font-family:'Orbitron',sans-serif;
       font-size:8pt;
       font-weight:700;
@@ -451,7 +451,7 @@ function FormulaModal({onClose}){
           <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:12}}>
             <div>
               <div style={{fontSize:16,fontWeight:900,letterSpacing:"0.04em"}}>📐 계산식 안내</div>
-              <div style={{fontSize:11,opacity:0.8,marginTop:2}}>NFPC/NFTC 103 스프링클러설비 산출 공식 전체 · Ver-3.3</div>
+              <div style={{fontSize:11,opacity:0.8,marginTop:2}}>NFPC/NFTC 103 스프링클러설비 산출 공식 전체 · Ver-3.4</div>
             </div>
             <button onClick={onClose} style={{background:"rgba(255,255,255,0.15)",border:"none",color:"white",borderRadius:8,width:34,height:34,fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700}}>✕</button>
           </div>
@@ -474,7 +474,7 @@ function FormulaModal({onClose}){
                 <span style={{fontSize:20}}>🚒</span> 스프링클러설비 펌프 용량 계산서 이용방법
               </div>
               <div style={{fontSize:10.5,color:"rgba(255,255,255,.75)",lineHeight:1.7}}>
-                NFPC/NFTC 103 [시행 2026.3.1.] · Hazen-Williams 공식 · MANMIN Ver-3.3<br/>
+                NFPC/NFTC 103 [시행 2026.7.1.] · Hazen-Williams 공식 · MANMIN Ver-3.4<br/>
                 아래 순서대로 입력하면 수원·양정·동력이 자동으로 산출됩니다.
               </div>
             </div>
@@ -571,7 +571,7 @@ function FormulaModal({onClose}){
             <div style={{border:"1.5px solid #bbf7d0",background:"#f0fdf4",borderRadius:10,padding:"12px 14px"}}>
               <div style={{fontSize:11,fontWeight:800,color:"#15803d",marginBottom:6}}>📌 주요 법적 근거</div>
               <div className="fml-note" style={{fontSize:10.5,lineHeight:2.1}}>
-                <strong>NFPC 103</strong> — 스프링클러설비의 화재안전성능기준 [시행 2026.3.1.]<br/>
+                <strong>NFPC 103</strong> — 스프링클러설비의 화재안전성능기준 [시행 2026.7.1.]<br/>
                 <strong>NFTC 103 §2.1.1.1</strong> — 기준개수 표 (10 / 20 / 30개), 수원 용량 산정<br/>
                 <strong>NFTC 103 §2.2.1.10~11</strong> — 방수압 0.1 MPa, 방사량 80 ℓ/min<br/>
                 <strong>NFTC 103 §2.5.3.3</strong> — 유속 제한 (가지 6 m/s / 기타 10 m/s)<br/>
@@ -694,7 +694,7 @@ function FormulaModal({onClose}){
           </div>
 
           <div style={{textAlign:"center",fontSize:10,color:"#9ca3af",paddingTop:8,borderTop:"1px solid #f1f5f9"}}>
-            NFPC 103 / NFTC 103 [시행 2026.3.1.] · Hazen-Williams Formula · MANMIN Ver-3.3
+            NFPC 103 / NFTC 103 [시행 2026.7.1.] · Hazen-Williams Formula · MANMIN Ver-3.4
           </div>
         </div>
       </div>
@@ -886,7 +886,7 @@ function App(){
               <div style={{fontSize:11,marginTop:8,opacity:0.85,fontFamily:"'Noto Sans KR',sans-serif",letterSpacing:"0.02em"}}>
                 Sprinkler Pump Capacity Calculator · NFPC/NFTC 103 · NFTC 604 적용 &nbsp;
                 <span style={{fontFamily:"'Orbitron',sans-serif",fontWeight:900,fontSize:12,color:"#86efac",letterSpacing:"0.08em",textShadow:"0 0 8px rgba(134,239,172,0.6)"}}>
-                  MANMIN · Ver-3.3
+                  MANMIN · Ver-3.4
                 </span>
               </div>
             </div>
@@ -894,7 +894,7 @@ function App(){
               <div style={{fontWeight:700,fontSize:13}}>NFTC 103</div>
               <div>스프링클러설비의</div>
               <div>화재안전기술기준</div>
-              <div style={{marginTop:4,fontSize:10,color:"#86efac"}}>[시행 2026. 3. 1.]</div>
+              <div style={{marginTop:4,fontSize:10,color:"#86efac"}}>[시행 2026. 7. 1.]</div>
             </div>
           </div>
           {/* 탭 */}
@@ -1131,7 +1131,7 @@ function App(){
 
             {/* 하단 개발자 표기 */}
             <div style={{textAlign:"right",fontFamily:"'Orbitron',sans-serif",fontSize:10,fontWeight:700,color:"#94a3b8",letterSpacing:"0.08em",paddingRight:4}}>
-              MANMIN · Ver-3.3
+              MANMIN · Ver-3.4
             </div>
           </div>
         )}
@@ -1224,7 +1224,7 @@ function App(){
             </div>
 
             <div style={{textAlign:"right",fontFamily:"'Orbitron',sans-serif",fontSize:10,fontWeight:700,color:"#94a3b8",letterSpacing:"0.08em",marginTop:6,paddingRight:4}}>
-              MANMIN · Ver-3.3
+              MANMIN · Ver-3.4
             </div>
           </div>
         )}
@@ -1254,7 +1254,7 @@ function App(){
               {/* 제목 */}
               <div style={{textAlign:"center",marginBottom:28,borderBottom:"3px double #334155",paddingBottom:16}}>
                 <div style={{fontSize:22,fontWeight:900,letterSpacing:"0.06em"}}>스프링클러설비 펌프 용량 계산서</div>
-                <div style={{fontSize:12,color:"#64748b",marginTop:6}}>화재안전기준(NFPC 103) · 화재안전기술기준(NFTC 103) 적용 [시행 2026. 3. 1.]</div>
+                <div style={{fontSize:12,color:"#64748b",marginTop:6}}>화재안전기준(NFPC 103) · 화재안전기술기준(NFTC 103) 적용 [시행 2026. 7. 1.]</div>
                 <table style={{margin:"12px auto 0",borderCollapse:"collapse"}}>
                   <tbody>
                     <tr>
@@ -1373,7 +1373,7 @@ function App(){
               <div style={{padding:13,background:"#f8fafc",borderRadius:8,fontSize:11,color:"#6b7280",border:BD,lineHeight:1.9}}>
                 <b style={{color:"#374151"}}>▣ 적용 법령 및 기준</b><br/>
                 ① 화재안전기준 NFPC 103 (스프링클러설비의 화재안전기준)<br/>
-                ② 화재안전기술기준 NFTC 103 [시행 2026. 3. 1.] [국립소방연구원공고 제2026-8호]<br/>
+                ② 화재안전기술기준 NFTC 103 [시행 2026. 7. 1.] [국립소방연구원공고]<br/>
                 &nbsp;&nbsp;- 제2.1조 (수원): 기준개수 × {C.waterVolPer} m³ 이상 (표 2.1.1.1){sys.buildingFloor>1?" — NFTC 604 고층건축물 적용":""}<br/>
                 &nbsp;&nbsp;- 제2.2조 (가압송수장치): 방수압 0.1~1.2 MPa, 방수량 80 ℓ/min 이상 (§2.2.1.10~11)<br/>
                 &nbsp;&nbsp;- 제2.5조 (배관): 가지배관 유속 ≤ 6 m/s, 기타 배관 ≤ 10 m/s (§2.5.3.3)<br/>
@@ -1383,7 +1383,7 @@ function App(){
                 {["STS","CPVC"].includes(sys.pipeType)&&" (내식성 배관 — C=150 적용)"}
               </div>
 
-              <div id="dev-stamp" style={{fontFamily:"'Orbitron',sans-serif",fontWeight:700,letterSpacing:"0.08em"}}>MANMIN · Ver-3.3</div>
+              <div id="dev-stamp" style={{fontFamily:"'Orbitron',sans-serif",fontWeight:700,letterSpacing:"0.08em"}}>MANMIN · Ver-3.4</div>
             </div>{/* /report-zone */}
             </div>{/* /rpt-inner */}
             </div>{/* /rpt-outer */}
@@ -1437,7 +1437,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 </script>
 
 <!-- ═══ Service Worker Ver 3.2 — 재설치 문제 원천 차단 ═══ -->
-<!-- ═══ Service Worker Ver 3.3 — 재설치 문제 완전 해결 최종판 ═══ -->
+<!-- ═══ Service Worker Ver 3.4 — 재설치 문제 완전 해결 최종판 ═══ -->
 <script>
 (function(){
   'use strict';
@@ -1452,7 +1452,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
       .then(reg => {
         console.log('[PWA v3.3] SW 등록 — scope:', reg.scope);
 
-        /* ★★★ Ver 3.3 핵심 변경 ★★★
+        /* ★★★ Ver 3.4 핵심 변경 ★★★
            reg.waiting 자동 skipWaiting 완전 제거
            이유: 자동 처리 → controllerchange → location.reload()
                 → beforeinstallprompt 타이밍 소실 → FAB 미표시
