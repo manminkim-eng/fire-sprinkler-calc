@@ -21,7 +21,7 @@
    ★ 다음 배포 시: CACHE_VER 숫자만 올리면 됨
 ═══════════════════════════════════════════════════════════════ */
 
-const CACHE_VER    = 'v3.3';
+const CACHE_VER    = 'v3.4';
 const CACHE_NAME   = `manmin-sprinkler-${CACHE_VER}`;
 const STATIC_CACHE = `manmin-sprinkler-static-${CACHE_VER}`;
 
@@ -35,6 +35,9 @@ const PRECACHE_URLS = [
   './icons/favicon-32.png',
   './icons/favicon-16.png',
   './icons/favicon.ico',
+  /* 로컬 폴백 폰트 — CDN 차단·오프라인 시 한글 깨짐 방지 */
+  './assets/fonts/manmin-fonts.css',
+  './assets/fonts/NotoSansKR-var.woff2',
 ];
 
 /* ── INSTALL : 선캐싱 후 skipWaiting 즉시 호출 ── */
