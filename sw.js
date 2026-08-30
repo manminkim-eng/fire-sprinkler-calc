@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════
    Service Worker — 스프링클러설비 펌프 용량 계산서
-   Developer MANMIN · Ver-3.3
+   Developer MANMIN · Ver-5.0
 
    ▣ Ver 3.3 — 재설치 문제 완전 해결 (최종판)
    -------------------------------------------------------
@@ -21,7 +21,7 @@
    ★ 다음 배포 시: CACHE_VER 숫자만 올리면 됨
 ═══════════════════════════════════════════════════════════════ */
 
-const CACHE_VER    = 'v3.4';
+const CACHE_VER    = 'v5.0';
 const CACHE_NAME   = `manmin-sprinkler-${CACHE_VER}`;
 const STATIC_CACHE = `manmin-sprinkler-static-${CACHE_VER}`;
 
