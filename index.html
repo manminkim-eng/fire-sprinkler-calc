@@ -70,6 +70,8 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Noto Sans KR','Noto Sans KR Local',sans-serif;background:#f1f5f9;-webkit-font-smoothing:antialiased;}
 input,select,button,td,th,div,span,p,h1,h2,label{font-family:'Noto Sans KR','Noto Sans KR Local',sans-serif !important;}
+/* v5.0-HDR (2026-09-02) — 각인은 클래스 특이성으로 태그목록 규칙을 이긴다(§3-7). 태그목록·계산서는 손대지 않는다 */
+.hdr-manmin{font-family:'Orbitron',sans-serif !important;}
 input[type=number]::-webkit-inner-spin-button{opacity:0.5;}
 
 @media print{
@@ -197,7 +199,7 @@ input[type=number]::-webkit-inner-spin-button{opacity:0.5;}
   .g-4{grid-template-columns:repeat(2,1fr);}
   .g-3{grid-template-columns:repeat(2,1fr);}
   .g-motor{grid-template-columns:1fr 1fr;}
-  .hdr-row{flex-direction:column;gap:8px;}
+  .hdr-row{flex-direction:column;gap:0;}   /* v5.0-HDR — 빈 우측 블록의 유령 8px 제거 → 375 에서 168.6 */
 }
 @media(max-width:420px){
   .g-4{grid-template-columns:1fr;}
@@ -292,6 +294,9 @@ input[type=number]::-webkit-inner-spin-button{opacity:0.5;}
   .hdr-pad{padding:0 14px!important;}
 }
 </style>
+<style id="mm-r1">/* R1 (2026-09-04 · 지시서 §20-1 · S10 소급) — 인쇄 PDF 하단 각인 MANMIN · Ver 비표시. 버전은 A4 푸터 [MANMIN-Ver5.0] 이 담당 */
+#dev-stamp,#dev-stamp-print,.dev-stamp{display:none!important;}
+@media print{#dev-stamp,#dev-stamp-print,.dev-stamp{display:none!important;}}</style>
 <body>
 <div id="root"></div>
 <script type="text/babel">
@@ -882,7 +887,7 @@ function App(){
   /* 탭 스타일 */
   const tabs=["① 데이터 입력","② 계산 결과","③ 계산서 출력"];
   const tabStyle=(i)=>({
-    padding:"11px 28px",cursor:"pointer",border:"none",fontWeight:700,fontSize:13,
+    padding:"11px 16px",cursor:"pointer",border:"none",fontWeight:700,fontSize:13,
     fontFamily:"'Noto Sans KR','Noto Sans KR Local',sans-serif",letterSpacing:"0.02em",
     background:tab===i?"#15803d":"white",
     color:tab===i?"white":"#374151",
@@ -895,7 +900,7 @@ function App(){
     <div style={{minHeight:"100vh",background:"linear-gradient(135deg,#f0fdf4 0%,#f1f5f9 100%)"}}>
 
       {/* ── 헤더 ── */}
-      <div className="no-print" style={{background:"linear-gradient(135deg,#0f4c2e,#15803d,#166534)",color:"white",padding:"20px 0 0"}}>
+      <div className="no-print" style={{background:"linear-gradient(135deg,#0f4c2e,#15803d,#166534)",color:"white",padding:"20px 0 0",boxShadow:"0 2px 20px rgba(21,128,61,.35)"}}>
         <div className="hdr-pad" style={{maxWidth:1200,margin:"0 auto",padding:"0 24px"}}>
           <div className="hdr-row">
             <div>
@@ -907,7 +912,7 @@ function App(){
               </h1>
               <div style={{fontSize:11,marginTop:8,opacity:0.85,fontFamily:"'Noto Sans KR','Noto Sans KR Local',sans-serif",letterSpacing:"0.02em"}}>
                 Sprinkler Pump Capacity Calculator · NFPC/NFTC 103 · NFTC 604 적용 &nbsp;
-                <span style={{fontFamily:"'Orbitron',sans-serif",fontWeight:900,fontSize:12,color:"#86efac",letterSpacing:"0.08em",textShadow:"0 0 8px rgba(134,239,172,0.6)"}}>
+                <span className="hdr-manmin" style={{fontFamily:"'Orbitron',sans-serif",fontWeight:900,fontSize:12,color:"#86efac",letterSpacing:"0.08em",textShadow:"0 0 8px rgba(134,239,172,0.6)"}}>
                   MANMIN · Ver-5.0
                 </span>
               </div>
@@ -1904,5 +1909,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 
 
 <!-- Cloudflare Web Analytics --><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "e7878b8cc50d40039bb212406a3f1757"}'></script><!-- End Cloudflare Web Analytics -->
+<script>/* R26 (2026-09-04 · 지시서 §20-15 ③ · S10 소급) — 인쇄 중 문서 제목을 비워 PDF 머리글의 페이지 제목을 지운다. 쪽번호·URL 은 브라우저 옵션 */
+(function(){var t=null;window.addEventListener('beforeprint',function(){if(t===null){t=document.title;}document.title=' ';});window.addEventListener('afterprint',function(){if(t!==null){document.title=t;t=null;}});})();</script>
 </body>
 </html>
