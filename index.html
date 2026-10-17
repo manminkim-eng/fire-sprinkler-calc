@@ -937,8 +937,8 @@ function App(){
   const tabStyle=(i)=>({
     padding:"11px 16px",cursor:"pointer",border:"none",fontWeight:700,fontSize:13,
     fontFamily:"'Noto Sans KR','Noto Sans KR Local',sans-serif",letterSpacing:"0.02em",
-    background:tab===i?"#15803d":"white",
-    color:tab===i?"white":"#374151",
+    background:tab===i?"#15803d":"transparent",
+    color:tab===i?"white":"rgba(255,255,255,0.75)",
     borderBottom:tab===i?"3px solid #15803d":"3px solid transparent",
     transition:"all 0.15s",
   });
@@ -977,7 +977,7 @@ function App(){
             {tabs.map((t,i)=><button key={i} onClick={()=>setTab(i)} style={tabStyle(i)}>{t}</button>)}
             <a className="tb-manual" href="https://manminkim-eng.github.io/fire-sprinkler-calc/manual/" target="_blank" rel="noopener"
                onClick={e=>{if(navigator.onLine===false){e.preventDefault();const t=document.createElement('div');t.textContent='매뉴얼은 인터넷 연결 시 열립니다';t.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#0f172a;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;z-index:9999';document.body.appendChild(t);setTimeout(()=>t.remove(),2200);}}}
-               style={{marginLeft:"auto",padding:"11px 16px",fontWeight:700,fontSize:13,color:"#374151",background:"white",textDecoration:"none",borderBottom:"3px solid transparent",flexShrink:0,fontFamily:"'Noto Sans KR','Noto Sans KR Local',sans-serif"}}>📘 매뉴얼</a>
+               style={{marginLeft:"auto",padding:"11px 16px",fontWeight:700,fontSize:13,color:"white",textDecoration:"none",borderBottom:"3px solid transparent",flexShrink:0,fontFamily:"'Noto Sans KR','Noto Sans KR Local',sans-serif"}}>📘 매뉴얼</a>
           </div>
         </div>
       </div>
