@@ -85,6 +85,8 @@ input[type=number]::-webkit-inner-spin-button{opacity:0.5;}
   #no-print{display:none !important;}
   .no-print{display:none !important;}
   #report-zone{box-shadow:none !important;border:none !important;padding:0 !important;margin:0 !important;border-radius:0 !important;}
+  /* 2026-10-31 v5.1.8 — A4 여백 통일(작업지시서 §25-6-27): 입력 화면용 바깥 틀 .main-outer 의 24px 안쪽 여백이 인쇄에도 남아 계산서 좌우 · 위 여백이 6mm 더 넓던 것 → 인쇄에서는 0(전 도구 공통 14/12/22/14mm 만 남김) */
+  .main-outer{padding:0 !important;margin:0 !important;max-width:none !important;}
   /* 2026-10-31 v5.1.5 — 계산서 구획 제목 · 표 머리가 남색 바탕 + 흰 글자인데, 크롬 기본(배경 그래픽 끔)에서는 바탕이 빠져 흰 글자가 흐려짐 → 화면 A4 미리보기와 같게 바탕색 인쇄 고정 */
   #report-zone,#report-zone *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
   .page-break{page-break-before:always;}
