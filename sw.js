@@ -1,4 +1,5 @@
 /*
+   v5.1.4 2026-10-31 — 휴대전화 · 터치 화면 단추 · 입력칸 최소 높이 32px · 캐시명 v5.1.4
    v5.1.0 회차 2026-10-15 — NFPC 103(제2025-25호) · NFTC 103(제2026-35호) · NFTC 604 · 608 원문 대조 근거 정정 · 기준개수 표 · 설치개수 · 옥상수조 · KS 강관 내경 · 압력 판정 · 구간별 유속 판정 · 계산 엔진 단일화 · 매뉴얼(/manual/) 캐시 제외
    ═══════════════════════════════════════════════════════════════
    S9 회차 2026-09-05 — R28 JPG v5.5 소제목 동반 이관 동반 캐시명 v5.0.6
@@ -43,7 +44,7 @@ const mmMatch = (req, opt) => caches.keys()
   .then((ks) => ks.reduce((p, k) => p.then((r) => r || caches.open(k).then((c) => c.match(req, opt))), Promise.resolve(undefined)))
   .then((r) => (r && r.type === 'opaque' && req && req.mode === 'cors') ? undefined : r);
 
-const CACHE_VER    = 'v5.1.3';
+const CACHE_VER    = 'v5.1.4';
 const CACHE_NAME   = `manmin-sprinkler-${CACHE_VER}`;
 const STATIC_CACHE = `manmin-sprinkler-static-${CACHE_VER}`;
 
