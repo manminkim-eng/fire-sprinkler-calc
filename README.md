@@ -1,5 +1,10 @@
 # 🔴 스프링클러설비 펌프 용량 계산서 PWA — **Ver 5.1** (v5.1.0)
 
+## v6.1.2 (2026-11-12) — html2canvas SRI(정밀검토 B8)
+
+- html2canvas 1.4.1 머리 태그 SRI(integrity sha384 · crossorigin) · 공통 인쇄 원본 MM-PRINT v1.0 → v1.1(지연 로더도 SRI)(정밀검토 B8 · html2canvas SRI) — 화면 · 계산 · 인쇄 불변 · 작업지시서 §25-6-87.
+- sw 캐시명 v6.1.2 · MM-PROJECT 구간 · 사용자 매뉴얼 변경 없음.
+
 ## v6.1.1 (2026-11-12) — CDN 판 통일 · SRI(정밀검토 C2)
 
 - React 18.3.1 · Babel 7.29.7 주소 unpkg → cdnjs(같은 파일 · 해시 일치) · SRI(integrity) · Pretendard CSS SRI(정밀검토 C2) — 화면 · 계산 · 인쇄 불변 · 작업지시서 §25-6-82.
