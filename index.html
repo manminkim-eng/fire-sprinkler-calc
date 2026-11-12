@@ -38,7 +38,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"/>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="./assets/fonts/manmin-fonts.css"/><!-- 로컬 폴백 폰트 -->
 <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
@@ -574,7 +574,7 @@ function FormulaModal({onClose}){
                 <span style={{fontSize:20}}>🚒</span> 스프링클러설비 펌프 용량 계산서 이용방법
               </div>
               <div style={{fontSize:11,color:"rgba(255,255,255,.75)",lineHeight:1.7}}>
-                NFPC 103 [제2025-25호] · NFTC 103 [공고 제2026-35호] · Hazen-Williams 공식 · MANMIN Ver-5.1<br/>
+                NFPC 103 [제2025-25호] · NFTC 103 [공고 제2026-35호] · Hazen-Williams 공식 · MANMIN Ver-6.1<br/>
                 아래 순서대로 입력하면 수원·양정·동력이 자동으로 산출됩니다.
               </div>
             </div>
@@ -822,7 +822,7 @@ function FormulaModal({onClose}){
           </div>
 
           <div style={{textAlign:"center",fontSize:11,color:"#9ca3af",paddingTop:8,borderTop:"1px solid #f1f5f9"}}>
-            NFPC 103 [제2025-25호, 2026. 3. 1.] · NFTC 103 [공고 제2026-35호, 2026. 7. 1.] · Hazen-Williams Formula · MANMIN Ver-5.1
+            NFPC 103 [제2025-25호, 2026. 3. 1.] · NFTC 103 [공고 제2026-35호, 2026. 7. 1.] · Hazen-Williams Formula · MANMIN Ver-6.1
           </div>
         </div>
       </div>
@@ -981,7 +981,7 @@ function App(){
               <div style={{fontSize:11,marginTop:8,opacity:0.85,fontFamily:"'Pretendard Variable',Pretendard,'Noto Sans KR','Noto Sans KR Local',sans-serif",letterSpacing:"0.02em"}}>
                 Sprinkler Pump Capacity Calculator · NFPC/NFTC 103 · NFTC 604 · 608 적용 &nbsp;
                 <span className="hdr-manmin" style={{fontFamily:"'Orbitron',sans-serif",fontWeight:900,fontSize:12,color:"#86efac",letterSpacing:"0.08em",textShadow:"0 0 8px rgba(134,239,172,0.6)"}}>
-                  MANMIN · Ver-5.1
+                  MANMIN · Ver-6.1
                 </span>
               </div>
             </div>
@@ -1264,7 +1264,7 @@ function App(){
 
             {/* 하단 개발자 표기 */}
             <div style={{textAlign:"right",fontFamily:"'Orbitron',sans-serif",fontSize:11,fontWeight:700,color:"#94a3b8",letterSpacing:"0.08em",paddingRight:4}}>
-              MANMIN · Ver-5.1
+              MANMIN · Ver-6.1
             </div>
           </div>
         )}
@@ -1367,7 +1367,7 @@ function App(){
             </div>
 
             <div style={{textAlign:"right",fontFamily:"'Orbitron',sans-serif",fontSize:11,fontWeight:700,color:"#94a3b8",letterSpacing:"0.08em",marginTop:6,paddingRight:4}}>
-              MANMIN · Ver-5.1
+              MANMIN · Ver-6.1
             </div>
           </div>
         )}
@@ -1532,7 +1532,7 @@ function App(){
                 ⓑ MANMIN 참고값: 안전율 10 % · 올림 · 관부속 상당길이 · K · η · C값 · STS · CPVC 내경(화재안전기준에 수치 없음)
               </div>
 
-              <div id="dev-stamp" style={{fontFamily:"'Orbitron',sans-serif",fontWeight:700,letterSpacing:"0.08em"}}>MANMIN · Ver-5.1</div>
+              <div id="dev-stamp" style={{fontFamily:"'Orbitron',sans-serif",fontWeight:700,letterSpacing:"0.08em"}}>MANMIN · Ver-6.1</div>
             </div>{/* /report-zone */}
             </div>{/* /rpt-inner */}
             </div>{/* /rpt-outer */}
@@ -2050,7 +2050,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 <footer class="mm-foot no-print">
   <div class="foot-inner">
     <div>
-      <div class="foot-nm">MANMIN Ver-5.1</div>
+      <div class="foot-nm">MANMIN Ver-6.1</div>
       <div class="foot-desc">스프링클러설비 펌프 용량 계산서 | NFPC · NFTC 103 · NFTC 604 · 608</div>
     </div>
     <div class="foot-copy">ARCHITECT KIM MANMIN © 2026</div>
@@ -2193,10 +2193,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
 </script>
-<!-- MM-PROJECT:BEGIN v1.2 -->
+<!-- MM-PROJECT:BEGIN v1.3 -->
 <script id="mm-project-js" data-tool="스프링클러" data-pos="bottom:172px;right:18px" data-map="{&quot;사업명&quot;:&quot;re:공사명&quot;,&quot;위치&quot;:&quot;-&quot;,&quot;발주처&quot;:&quot;-&quot;,&quot;작성자&quot;:&quot;re:설계자&quot;,&quot;연면적&quot;:&quot;-&quot;,&quot;지상층&quot;:&quot;-&quot;,&quot;지하층&quot;:&quot;-&quot;,&quot;높이&quot;:&quot;-&quot;,&quot;구조&quot;:&quot;-&quot;}">
-/* MANMIN 공통 건물개요 원본 manmin-project.js v1.2 (2026-11-09, 작업지시서 §25-6-52 · v1.1 §25-6-51 · v1.0 §25-6-50)
-   정본: Z:\MIN-A\01.만민자료\02.설계자료\11.개발자료\65.개발자료[건물개요]\버전s-1.2\manmin-project-v1.2\
+/* MANMIN 공통 건물개요 원본 manmin-project.js v1.3 (2026-11-12, 작업지시서 §25-6-80 · v1.2 §25-6-52 · v1.1 §25-6-51 · v1.0 §25-6-50)
+   v1.3: 불러오기 창 표에 도구 CSS(줄무늬 · 칸 배경 · 글자색 · 머리칸 대문자 · 작은 글자)가 새지 않도록 표 칸 모양 고정(정밀검토 C10) — 동작 · 저장값 · 파일 형식 같음
+   정본: Z:\MIN-A\01.만민자료\02.설계자료\11.개발자료\65.개발자료[건물개요]\버전s-1.3\manmin-project-v1.3\
    도구에는 inject.py 가 MM-PROJECT:BEGIN · MM-PROJECT:END 표식 사이에 그대로 끼워 넣음(외부 링크 없음 · 오프라인 · Z: 사본 단독 동작). 도구에서 직접 고치지 말 것.
    하는 일: 같은 현장의 표지 정보 · 건물 수치를 localStorage「MANMIN_PROJECT_V1」에 담고 다른 도구에서 불러옴(같은 주소 manminkim-eng.github.io 아래 공유).
      저장 = 지금 도구 값을 담음(이 도구에 없는 항목은 저장값 그대로) · 불러오기 = 채울 값을 목록으로 먼저 보여 주고 확인하면 채움(이미 입력된 칸은 직접 체크해야 덮어씀)
@@ -2207,7 +2208,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
    기타 설정: data-tool(저장한 도구 이름) · data-pos(단추 위치 CSS, 기본 "top:10px;right:12px" — 도구의 머리 글자 · 떠 있는 단추와 겹치지 않는 자리로 지정) */
 (function () {
   var me = document.currentScript; if (!me || window.MMProject) return;
-  var KEYNAME = 'MANMIN_PROJECT_V1', VER = 'v1.2';
+  var KEYNAME = 'MANMIN_PROJECT_V1', VER = 'v1.3';
   var KEYS = ['사업명', '위치', '발주처', '작성자', '연면적', '지상층', '지하층', '높이', '구조'];
   var NUM = { 연면적: 1, 지상층: 1, 지하층: 1, 높이: 1 };
   /* 이름표 정규식 — 사업명은 공통 인쇄 원본 KEY 와 같음 */
@@ -2316,7 +2317,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
     + '.mm-proj-foot{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px}.mm-proj-foot button{padding:7px 14px;font-size:13px;border-radius:8px;border:1px solid #d1d5db;background:#fff;cursor:pointer}'
     + '.mm-proj-foot button.mm-proj-ok{background:' + theme + ';border-color:' + theme + ';color:#fff;font-weight:600}'
     + '.mm-proj-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:2147483003;background:#111827;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;max-width:calc(100vw - 32px)}'
-    + '@media (max-width:480px){.mm-proj-dlg th,.mm-proj-dlg td{padding:5px 6px;font-size:12px}}'
+    + '.mm-proj-dlg tr{background:transparent!important}.mm-proj-dlg td{background:#fff!important;color:#1f2937!important;font-size:13px!important;text-transform:none!important;letter-spacing:normal!important}.mm-proj-dlg td.mm-proj-old{color:#9ca3af!important}'
+    + '.mm-proj-dlg th{background:#f9fafb!important;color:#374151!important;font-size:13px!important;font-weight:600!important;text-transform:none!important;letter-spacing:normal!important}'
+    + '@media (max-width:480px){.mm-proj-dlg th,.mm-proj-dlg td{padding:5px 6px;font-size:12px!important}}'
     + '@media print{.mm-proj-ui{display:none!important}}';
   function h(tag, attrs, html) { var e = document.createElement(tag); for (var k in attrs || {}) e.setAttribute(k, attrs[k]); if (html != null) e.innerHTML = html; return e; }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
