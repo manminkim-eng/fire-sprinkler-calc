@@ -321,7 +321,8 @@ footer.mm-foot{position:relative;z-index:1;border-top:1px solid #e4e9f0;backgrou
 <div id="root"></div>
 <script id="spk-engine">
 /* v5.1.0 — 계산 엔진 단일화: 화면 · A4 · 검증(_검증/verify_spk.py)이 같은 spkCalc()를 쓴다
-   v6.1.3 (2026-11-24) — 배관 사용압력 체절압력 기준(Pshut, 교차검증 P1) — 수원 · 전양정 · 동력 불변 */
+   v6.1.3 (2026-11-24) — 배관 사용압력 체절압력 기준(Pshut, 교차검증 P1) — 수원 · 전양정 · 동력 불변
+   v6.1.4 (2026-11-24) — 교차검증 권고 P4 · P6: 고층 기준개수 구분 확인(baseFloorMis) · CPVC 2.5.2 특례 확인(pipePressChk) — 표시 전용 · 수원 · 전양정 · 동력 불변 */
 /* 근거: 스프링클러설비의 화재안전성능기준(NFPC 103) 소방청고시 제2025-25호(2026. 3. 1. 시행) · 화재안전기술기준(NFTC 103) 국립소방연구원공고 제2026-35호(2026. 7. 1. 시행)
          고층건축물의 화재안전기술기준(NFTC 604) 공고 제2023-44호(2023. 12. 20.) · 공동주택의 화재안전기술기준(NFTC 608) 공고 제2026-40호(2026. 7. 1.) */
 var NOZZLE_HEAD   = 10;   /* 헤드 선단 방수압력 0.1 MPa 이상 ≒ 10 m (NFTC 103 2.2.1.10) */
@@ -421,18 +422,22 @@ function spkCalc(sys,segs){
     const Pkw=0.163*M*J*K/N;
     const Php=nextHP(Pkw);
     /* v5.1.0 — 압력 판정(표시 전용 · 계산값 불변)
-       ① 배관 사용압력 S = 펌프 체절압력(v6.1.3 — 입력값, 없으면 정격 J × 0.00980665 × 1.4) — 1.2 MPa 이상이면 KS D 3562 · 3583(NFPC 103 제8조①2호 · NFTC 103 2.5.1.2) — 앱 선택지 중 KS D 3562만 적합
+       ① 배관 사용압력 S = 펌프 체절압력(v6.1.3 — 입력값, 없으면 정격 J × 0.00980665 × 1.4) — 1.2 MPa 이상이면 KS D 3562 · 3583(NFPC 103 제8조①2호 · NFTC 103 2.5.1.2) — 앱 선택지 중 KS D 3562만 적합 · CPVC는 NFTC 103 2.5.2 장소 특례(압력 수치 없음)라 「특례 확인」(v6.1.4)
        ② 최저층 헤드 방수압 T = (J − 최저층 헤드 높이 hL) × 0.00980665 MPa(배관 마찰 미차감 — 보수적) — 1.2 MPa 초과 시 상한(NFTC 103 2.2.1.10) 초과 → 감압 검토
           hStar = J − 1.2 ÷ 0.00980665 : 펌프 기준 이 높이 미만 헤드는 감압 검토 */
     const MPA_M=0.00980665;
     /* v6.1.3 (교차검증 2026-11-23 P1) — 배관 사용압력은 체절압력 기준(소방청 법령해석 412390 「배관사용압력[체절압력]」)
        Pshut = 입력한 펌프 체절압력(MPa) · 입력 없으면 정격 × 1.4(NFPC 103 제5조①5호 · NFTC 103 2.2.1.5 — 체절운전 시 정격토출압력의 140 % 이하) — 1.2 MPa 이상이면 KS D 3562 · 3583 */
     const Pdis=J*MPA_M; const shutIn=+(sys.shutPress||0); const shutUser=shutIn>0; const Pshut=shutUser?shutIn:Pdis*1.4;
-    const hiPress=Pshut>=1.2; const pipePressOK=!hiPress||sys.pipeType==="SCH40";
+    const hiPress=Pshut>=1.2;
+    /* v6.1.4 (교차검증 P6) — 합성수지배관(CPVC)은 NFTC 103 2.5.2 「2.5.1에도 불구하고 … 설치할 수 있다」 장소 특례(압력 수치 없음) → 부적합이 아니라 특례 장소 · 제품 성능인증 사용압력 확인 */
+    const pipePressChk=hiPress&&sys.pipeType==="CPVC"; const pipePressOK=!hiPress||sys.pipeType==="SCH40"||pipePressChk;
+    /* v6.1.4 (교차검증 P4) — 고층건축물(NFTC 604)인데 표 2.1.1.1 「10층 이하」 구분(앱 표기)을 고름 — 표시 전용 경고 */
+    const baseFloorMis=bf>1&&["F30","F20","S30","S20","H20","H10"].includes(btype.key);
     const hL=+(sys.lowHead||0); const Plow=(J-hL)*MPA_M; const overHead=Plow>1.2; const hStar=J-1.2/MPA_M;
     const velOverN=sdets.filter(d=>d.velOver).length;
     return{A,B,Clpm,D,R,Dt,roofEx,E,F,G,I,Jraw,J,N,K,M,Pkw,Php,pCfg,sdets,btype,waterVolPer,nInst,useInst,
-           Pdis,Pshut,shutUser,hiPress,pipePressOK,hL,Plow,overHead,hStar,velOverN};
+           Pdis,Pshut,shutUser,hiPress,pipePressOK,pipePressChk,baseFloorMis,hL,Plow,overHead,hStar,velOverN};
 }
 window.SPKENG={calc:spkCalc,PIPE_CONFIG:PIPE_CONFIG,FITTING_EQ:FITTING_EQ,TRANS_TYPE:TRANS_TYPE,BASE_HEAD_TYPES:BASE_HEAD_TYPES};
 </script>
@@ -1042,6 +1047,7 @@ function App(){
 
             {/* 시스템 파라미터 */}
             <Box title="Ⅰ-1. 스프링클러 시스템 파라미터 (NFTC 103 기준)" accent="#15803d">
+              <div style={{fontSize:11,color:"#6b7280",marginBottom:10}}>적용 범위 — 폐쇄형 헤드 · 기준개수 방식(NFTC 103 2.1.1.1 · 2.2.1.12) 전용 · 수리계산 방식 · 개방형 헤드는 다루지 않음(v6.1.4)</div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(210px,1fr))",gap:14}}>
 
                 {/* 건축물 규모 — NFTC 604 고층건축물 연동 */}
@@ -1055,6 +1061,11 @@ function App(){
                   <div style={{fontSize:11,color:"#9ca3af",marginTop:4}}>
                     고층건축물 = 층수 30층 이상 또는 높이 120 m 이상(건축법 제2조①19호) · 1.6 / 3.2 / 4.8 m³ = 80 ℓ/min × 20 / 40 / 60분 ÷ 1,000
                   </div>
+                  {sys.buildingFloor==3&&(
+                    <div className="mm-bf50-note" style={{marginTop:5,fontSize:11,color:"#c2410c",fontWeight:700,padding:"4px 8px",background:"#fff7ed",borderRadius:6,border:"1px solid #fed7aa"}}>
+                      ⚠ 50층 이상 — 헤드에 2개 이상 가지배관으로 양방향 급수 · 수리계산에 의한 설계 대상(NFTC 604 2.2.7) · 이 도구는 기준개수 방식이므로 수리계산서를 따로 작성
+                    </div>
+                  )}
                 </div>
 
                 {/* A. 기준개수 선택 */}
@@ -1068,6 +1079,11 @@ function App(){
                   <div style={{fontSize:11,color:"#9ca3af",marginTop:4}}>
                     {C.btype.src} · 헤드 1개당 80 ℓ/min 이상(계산 80) (NFTC 103 2.2.1.11 · 2.2.1.12) · 2 이상 해당 시 많은 쪽(표 비고)
                   </div>
+                  {C.baseFloorMis&&(
+                    <div className="mm-base-warn" style={{marginTop:5,fontSize:11,color:"#c2410c",fontWeight:700,padding:"4px 8px",background:"#fff7ed",borderRadius:6,border:"1px solid #fed7aa"}}>
+                      ⚠ 고층건축물인데 「10층 이하」 구분 — 기준개수 구분 확인(표 2.1.1.1 · 11층 이상은 「11층 이상」 구분, 아파트등은 NFTC 608)
+                    </div>
+                  )}
                 </div>
 
                 {/* A-1 — v5.1.0 설치개수 */}
@@ -1082,10 +1098,10 @@ function App(){
                   <LabelEl>옥상수조 (유효수량의 1/3)</LabelEl>
                   <Sel val={sys.roofEx} onChange={v=>ss("roofEx",parseInt(v))}>
                     <option value={0}>설치 대상 — 1/3 이상 가산</option>
-                    <option value={1}>면제 — NFTC 103 2.1.2 단서 해당</option>
+                    <option value={1}>{sys.buildingFloor>1?"면제 — 2.1.2 (2) 고가수조 또는 (3) 수원이 최상층 헤드보다 높음(NFTC 604 2.2.2)":"면제 — NFTC 103 2.1.2 단서 해당"}</option>
                   </Sel>
                   <div style={{fontSize:11,color:"#0891b2",marginTop:4,fontWeight:600,padding:"3px 8px",background:"#ecfeff",borderRadius:6,border:"1px solid #cffafe"}}>
-                    {sys.roofEx==1?(sys.buildingFloor==1?"단서 (1) 지하층만 · (2) 고가수조 · (3) 수원이 최상층 헤드보다 높음 · (4) 높이 10 m 이하 · (5) 예비펌프 · (6) 가압수조":"⚠ 고층건축물은 NFTC 103 2.1.2 (2) · (3)만 면제 (NFTC 604 2.2.2)"):"NFPC 103 제4조② · NFTC 103 2.1.2 · NFTC 604 2.2.2"}
+                    {sys.roofEx==1?(sys.buildingFloor==1?"단서 (1) 지하층만 · (2) 고가수조 · (3) 수원이 최상층 헤드보다 높음 · (4) 높이 10 m 이하 · (5) 예비펌프 · (6) 가압수조":"⚠ 고층건축물 — NFTC 103 2.1.2 (2) 고가수조 · (3) 수원이 최상층 헤드보다 높음에 해당할 때만 면제 · (1)(4)(5)(6)으로는 면제 안 됨 (NFTC 604 2.2.2)"):"NFPC 103 제4조② · NFTC 103 2.1.2 · NFTC 604 2.2.2"}
                   </div>
                 </div>
 
@@ -1135,6 +1151,11 @@ function App(){
                   {["STS","CPVC"].includes(sys.pipeType)&&(
                     <div style={{marginTop:5,fontSize:11,color:"#0891b2",fontWeight:600,padding:"4px 8px",background:"#ecfeff",borderRadius:6,border:"1px solid #cffafe"}}>
                       ✓ 내식성 배관 — C=150 적용{sys.pipeType==="CPVC"?" · 합성수지배관은 지하 매설 · 내화구조 덕트 · 피트 · 불연 천장 반자 안(소화수 충수)에 한함(NFTC 103 2.5.2)":""}
+                    </div>
+                  )}
+                  {C.pipePressChk&&(
+                    <div className="mm-pipe-chk" style={{marginTop:5,fontSize:11,color:"#c2410c",fontWeight:700,padding:"4px 8px",background:"#fff7ed",borderRadius:6,border:"1px solid #fed7aa"}}>
+                      ⚠ 사용압력(체절) {ff(C.Pshut,2)} MPa ≥ 1.2 MPa — 합성수지배관은 NFTC 103 2.5.2 특례 장소(지하 매설 · 내화구조 덕트/피트 · 불연/준불연 천장 · 반자 + 상시 충수)에 한함 — 제품 성능인증 사용압력 확인
                     </div>
                   )}
                   {!C.pipePressOK&&(
@@ -1328,11 +1349,11 @@ function App(){
               </div>
               {/* v5.1.0 — 압력 판정(표시 전용) */}
               <div className="g-2sm mm-press" style={{marginTop:14}}>
-                <Card label="S. 배관 사용압력 (체절압력)" value={ff(C.Pshut,3)} unit="MPa" formula={`${C.shutUser?"입력 체절압력":`정격 J × 0.0098 = ${ff(C.Pdis,3)} MPa × 1.4`} — ${C.hiPress?"1.2 MPa 이상: KS D 3562 · 3583 또는 릴리프밸브로 1.2 MPa 미만":"1.2 MPa 미만"} (NFTC 103 2.5.1 · 소방청 해석)`} badge={C.pipePressOK?"배관 적합":"배관 부적합"} bc={C.pipePressOK?"green":"red"}/>
-                <Card label="T. 최저층 헤드 방수압 (추정)" value={ff(C.Plow,3)} unit="MPa" formula={`(J − 최저층 ${ff(C.hL,1)} m) × 0.0098 — 배관 마찰 미차감`} badge={C.overHead?"1.2 MPa 초과":"1.2 MPa 이하"} bc={C.overHead?"red":"green"}/>
+                <Card label="S. 배관 사용압력 (체절압력)" value={ff(C.Pshut,3)} unit="MPa" formula={`${C.shutUser?"입력 체절압력":`정격 J × 0.0098 = ${ff(C.Pdis,3)} MPa × 1.4`} — ${C.hiPress?"1.2 MPa 이상: KS D 3562 · 3583 또는 릴리프밸브로 1.2 MPa 미만":"1.2 MPa 미만"} (NFTC 103 2.5.1 · 소방청 해석)`} badge={C.pipePressChk?"특례 확인":C.pipePressOK?"배관 적합":"배관 부적합"} bc={C.pipePressChk?"orange":C.pipePressOK?"green":"red"}/>
+                <Card label="T. 최저층 헤드 방수압 (추정)" value={ff(C.Plow,3)} unit="MPa" formula={`(J − 최저층 ${ff(C.hL,1)} m) × 0.0098 — 배관 마찰 미차감`} badge={C.overHead?"1.2 MPa 초과":"1.2 MPa 이하(추정)"} bc={C.overHead?"red":"green"}/>
               </div>
               <div className="mm-prv-note" style={{marginTop:8,fontSize:11,color:"#6b7280",lineHeight:1.6}}>
-                ※ 정격토출압력은 하나의 헤드선단에 0.1 MPa 이상 1.2 MPa 이하의 방수압력이 되는 크기(NFPC 103 제5조①9호 · NFTC 103 2.2.1.10) — {C.overHead?<>펌프 기준 <b style={{color:"#b91c1c"}}>{ff(C.hStar,1)} m</b> 미만 높이의 헤드는 1.2 MPa 초과 우려 — 감압 검토.</>:<>최저층 헤드도 1.2 MPa 이하(추정).</>} 저유량 운전 시 양정 상승(성능곡선)은 반영하지 않은 추정값입니다.{C.velOverN>0&&<> · 유속 초과 구간 <b style={{color:"#b91c1c"}}>{C.velOverN}개</b>(2.5.3.3 단서).</>}
+                ※ 정격토출압력은 하나의 헤드선단에 0.1 MPa 이상 1.2 MPa 이하의 방수압력이 되는 크기(NFPC 103 제5조①9호 · NFTC 103 2.2.1.10) — {C.overHead?<>펌프 기준 <b style={{color:"#b91c1c"}}>{ff(C.hStar,1)} m</b> 미만 높이의 헤드는 1.2 MPa 초과 우려 — 감압 검토.</>:<>최저층 헤드도 1.2 MPa 이하(추정).</>} 저유량 · 체절 측 압력 상승은 반영하지 않은 추정값 — 펌프 성능곡선으로 최종 확인.{C.velOverN>0&&<> · 유속 초과 구간 <b style={{color:"#b91c1c"}}>{C.velOverN}개</b>(2.5.3.3 단서).</>}
               </div>
             </Box>
 
@@ -1424,7 +1445,7 @@ function App(){
 
               {/* Ⅱ-1 수원 산정 */}
               <RSection title="Ⅱ-1. 수원 용량 산정">
-                <RRow no="A" label="스프링클러헤드의 기준개수"       value={C.A}              unit="개"      basis={`${C.btype.src} — ${C.btype.label}${C.useInst?` → 설치개수 ${C.nInst}개 적용(기준개수보다 적음)`:""}`}/>
+                <RRow no="A" label="스프링클러헤드의 기준개수"       value={C.A}              unit="개"      basis={`${C.btype.src} — ${C.btype.label}${C.useInst?` → 설치개수 ${C.nInst}개 적용(기준개수보다 적음)`:""}${C.baseFloorMis?" ⚠ 고층건축물 — 구분 확인":""}`}/>
                 <RRow no="B" label="헤드 1개당 방수량"               value={FLOW_PER_HEAD}    unit="ℓ/min"  basis="NFTC 103 2.2.1.11 · 2.2.1.12 (0.1 MPa 기준 80 ℓ/min 이상 — 계산 80)"/>
                 <RRow no="C" label="펌프의 토출량"                   value={C.Clpm}           unit="ℓ/min"  basis={`C = A × B = ${C.A} × ${FLOW_PER_HEAD}`}/>
                 <RRow no="D" label="수원의 용량 (유효수량)"           value={`${f3(C.D)} (= ${Math.round(C.D*1000)} ℓ)`} unit="m³" basis={`D = A × ${C.waterVolPer} m³ = ${C.A} × ${C.waterVolPer} (${sys.buildingFloor>1?"NFTC 604 2.2.1"+(sys.buildingFloor===3?" 단서":""):"NFTC 103 2.1.1.1"})`}/>
@@ -1439,8 +1460,8 @@ function App(){
                 <RRow no="G" label="헤드 선단 최소 방수압력 환산수두 (h₃)" value={f3(NOZZLE_HEAD)} unit="m"  basis="0.1 MPa 이상 ⇒ 10 m  (NFPC 103 제5조①9호 · NFTC 103 2.2.1.10)"/>
                 <RRow no="H" label="안전율 (SF = 10%)"                   value={f3(C.I)}        unit="m"  basis={`H = (E+F+G) × 0.1 = ${f3(C.E+C.F+C.G)} × 0.1`}/>
                 <RRow no="I" label="전  양  정"                           value={`${f3(C.Jraw)} → ${C.J}`} unit="m"  basis={`I = E+F+G+H = ${f3(C.Jraw)} m → ${C.J} m (올림 적용) — 안전율 10 % · 올림은 MANMIN 참고값(화재안전기준에 수치 없음)`} hi/>
-                <RRow no="S" label="배관 사용압력 (체절압력)"           value={ff(C.Pshut,3)}         unit="MPa" basis={`S = ${C.shutUser?"입력 체절압력":`J × 0.0098 × 1.4 (정격 ${ff(C.Pdis,3)})`} — ${C.hiPress?"1.2 MPa 이상 → KS D 3562 · 3583(NFTC 103 2.5.1.2) 또는 릴리프밸브로 1.2 MPa 미만":"1.2 MPa 미만"} (소방청 해석) · ${C.pCfg.shortLabel} ${C.pipePressOK?"적합":"부적합 ⚠"}`}/>
-                <RRow no="T" label="최저층 헤드 방수압 (추정)"         value={ff(C.Plow,3)}          unit="MPa" basis={`T = (J − 최저층 ${ff(C.hL,1)} m) × 0.0098 — ${C.overHead?"1.2 MPa 초과 → 감압 검토":"1.2 MPa 이하"} (NFTC 103 2.2.1.10)${C.overHead?` · 펌프 기준 ${ff(C.hStar,1)} m 미만 헤드`:""}`}/>
+                <RRow no="S" label="배관 사용압력 (체절압력)"           value={ff(C.Pshut,3)}         unit="MPa" basis={`S = ${C.shutUser?"입력 체절압력":`J × 0.0098 × 1.4 (정격 ${ff(C.Pdis,3)})`} — ${C.hiPress?"1.2 MPa 이상 → KS D 3562 · 3583(NFTC 103 2.5.1.2) 또는 릴리프밸브로 1.2 MPa 미만":"1.2 MPa 미만"} (소방청 해석) · ${C.pCfg.shortLabel} ${C.pipePressChk?"2.5.2 특례 장소 · 성능인증 사용압력 확인 ⚠":C.pipePressOK?"적합":"부적합 ⚠"}`}/>
+                <RRow no="T" label="최저층 헤드 방수압 (추정)"         value={ff(C.Plow,3)}          unit="MPa" basis={`T = (J − 최저층 ${ff(C.hL,1)} m) × 0.0098 — ${C.overHead?"1.2 MPa 초과 → 감압 검토":"1.2 MPa 이하(추정 · 성능곡선 확인)"} (NFTC 103 2.2.1.10)${C.overHead?` · 펌프 기준 ${ff(C.hStar,1)} m 미만 헤드`:""}`}/>
               </RSection>
 
               {/* Ⅱ-3 전동기 */}
@@ -1535,9 +1556,9 @@ function App(){
                 &nbsp;&nbsp;- 제8조① (배관): 1.2 MPa 미만 KS D 3507 · 5301(습식) · 3576 · 3595 · 4311 / 1.2 MPa 이상 KS D 3562 · 3583 (사용압력 = 체절압력 — 소방청 법령해석 412390)<br/>
                 ② 화재안전기술기준 NFTC 103 [국립소방연구원공고 제2026-35호, 시행 2026. 7. 1.]<br/>
                 &nbsp;&nbsp;- 2.1.1.1 (수원): 표 2.1.1.1 기준개수 × 1.6 m³ · 2.1.2 옥상수조 1/3(단서 면제) · 2.2.1.10 ~ 2.2.1.12 (방수압 · 방수량)<br/>
-                &nbsp;&nbsp;- 2.5.1 (배관 재질) · 2.5.3.3 단서 (수리계산 시 가지배관 6 m/s · 그 밖의 배관 10 m/s 이하)<br/>
+                &nbsp;&nbsp;- 2.5.1 (배관 재질){sys.pipeType==="CPVC"&&" · 2.5.2 (합성수지배관 장소 특례)"} · 2.5.3.3 단서 (수리계산 시 가지배관 6 m/s · 그 밖의 배관 10 m/s 이하)<br/>
                 {sys.buildingFloor>1&&<>③ 고층건축물의 화재안전기술기준 NFTC 604 [공고 제2023-44호, 시행 2023. 12. 20.]<br/>
-                &nbsp;&nbsp;- 2.2.1 (수원): {sys.buildingFloor===2?"기준개수 × 3.2 m³ 이상":"50층 이상 — 기준개수 × 4.8 m³ 이상(단서)"} · 2.2.2 옥상수조(단서 (2) · (3)만)<br/></>}
+                &nbsp;&nbsp;- 2.2.1 (수원): {sys.buildingFloor===2?"기준개수 × 3.2 m³ 이상":"50층 이상 — 기준개수 × 4.8 m³ 이상(단서)"} · 2.2.2 옥상수조(단서 (2) · (3)만){sys.buildingFloor===3&&" · 2.2.7 양방향 급수 · 수리계산 설계(별도)"}<br/></>}
                 {["P10","P30"].includes(sys.baseType)&&<>{sys.buildingFloor>1?"④":"③"} 공동주택의 화재안전기술기준 NFTC 608 [공고 제2026-40호, 시행 2026. 7. 1.] — 2.3.1.1 아파트등 기준개수 10개(주차장 연결 부분 30개)<br/></>}
                 ⓐ 배관 마찰손실: Hazen-Williams 공식 — {C.pCfg.shortLabel}, C = {C.pCfg.C} 적용 · 강관 내경 KS 외경 − 2 × 두께
                 {["STS","CPVC"].includes(sys.pipeType)&&" (내식성 배관 — C=150 적용)"}<br/>

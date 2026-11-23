@@ -13,6 +13,11 @@ const fJ=J=>{for(let h=0;h<200;h+=0.01){const r=spkCalc({...base,actualHead:+h.t
 let r=fJ(87);ck('J 87 → 체절 1.194 MPa 1.2 미만 · SCH10 적합',!r.hiPress&&r.pipePressOK&&!r.shutUser);
 r=fJ(88);ck('J 88 → 체절 1.208 MPa 1.2 이상 · SCH10 부적합',r.hiPress&&!r.pipePressOK);
 r=spkCalc({...base,actualHead:fJ(88).E,pipeType:"SCH40"},[seg({flow:80,dia:200})]);ck('J 88 · SCH40 → 적합',r.pipePressOK);
+r=spkCalc({...base,actualHead:fJ(88).E,pipeType:"CPVC"},[seg({flow:80,dia:200})]);ck('J 88 · CPVC → 부적합 아님 · 2.5.2 특례 확인(v6.1.4)',r.hiPress&&r.pipePressOK&&r.pipePressChk);
+r=spkCalc({...base,actualHead:fJ(87).E,pipeType:"CPVC"},[seg({flow:80,dia:200})]);ck('J 87 · CPVC → 1.2 미만 · 특례 확인 없음',!r.hiPress&&r.pipePressOK&&!r.pipePressChk);
+c=spkCalc({...base,buildingFloor:2,baseType:"H10"},[seg({})]);ck('고층 + H10(10층 이하) → 구분 확인 경고 · 수원 32 그대로(v6.1.4)',c.baseFloorMis&&Math.abs(c.D-32)<1e-9);
+c=spkCalc({...base,buildingFloor:2,baseType:"T30"},[seg({})]);ck('고층 + T30 → 경고 없음',!c.baseFloorMis);
+c=spkCalc({...base,buildingFloor:1,baseType:"H10"},[seg({})]);ck('일반 + H10 → 경고 없음',!c.baseFloorMis);
 r=spkCalc({...base,actualHead:fJ(88).E,shutPress:1.15},[seg({flow:80,dia:200})]);ck('J 88 · 체절 입력 1.15 → 1.2 미만 · SCH10 적합',r.shutUser&&!r.hiPress&&r.pipePressOK);
 r=spkCalc({...base,actualHead:fJ(87).E,shutPress:1.2},[seg({flow:80,dia:200})]);ck('J 87 · 체절 입력 1.20 → 1.2 이상 · SCH10 부적합',r.hiPress&&!r.pipePressOK);
 r=spkCalc({...base,actualHead:fJ(123).E,shutPress:0},[seg({flow:80,dia:200})]);ck('J 123 · 체절 0(미입력) → 정격 1.206 × 1.4 = 1.689',Math.abs(r.Pshut-123*0.00980665*1.4)<1e-12);
