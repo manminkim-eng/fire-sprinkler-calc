@@ -8,11 +8,14 @@ let c=spkCalc({...base,installN:9},[seg({})]);ck('설치개수 9 < 기준 10 →
 c=spkCalc({...base,installN:10},[seg({})]);ck('설치개수 10 = 기준 → A=10',c.A===10&&!c.useInst);
 c=spkCalc({...base,baseType:"T30",installN:35},[seg({})]);ck('설치개수 35 > 기준 30 → A=30',c.A===30);
 c=spkCalc({...base,buildingFloor:2,baseType:"P10"},[seg({})]);ck('고층 아파트 10 × 3.2 = 32 m³ · 옥상 10.667',Math.abs(c.D-32)<1e-9&&Math.abs(c.R-32/3)<1e-9);
-// J 정수 경계: J=122 → 1.196 MPa(미만) / J=123 → 1.206 MPa(이상)
+// v6.1.3 체절압력 경계(입력 없음 = 정격 × 1.4): J=87 → 1.194 MPa(미만) / J=88 → 1.208 MPa(이상)
 const fJ=J=>{for(let h=0;h<200;h+=0.01){const r=spkCalc({...base,actualHead:+h.toFixed(2)},[seg({flow:80,dia:200})]);if(r.J===J)return r;}};
-let r=fJ(122);ck('J 122 → 1.196 MPa 1.2 미만 · SCH10 적합',!r.hiPress&&r.pipePressOK);
-r=fJ(123);ck('J 123 → 1.206 MPa 1.2 이상 · SCH10 부적합',r.hiPress&&!r.pipePressOK);
-r=spkCalc({...fJ(123),...base,actualHead:fJ(123).E,pipeType:"SCH40"},[seg({flow:80,dia:200})]);ck('J 123 · SCH40 → 적합',r.pipePressOK);
+let r=fJ(87);ck('J 87 → 체절 1.194 MPa 1.2 미만 · SCH10 적합',!r.hiPress&&r.pipePressOK&&!r.shutUser);
+r=fJ(88);ck('J 88 → 체절 1.208 MPa 1.2 이상 · SCH10 부적합',r.hiPress&&!r.pipePressOK);
+r=spkCalc({...base,actualHead:fJ(88).E,pipeType:"SCH40"},[seg({flow:80,dia:200})]);ck('J 88 · SCH40 → 적합',r.pipePressOK);
+r=spkCalc({...base,actualHead:fJ(88).E,shutPress:1.15},[seg({flow:80,dia:200})]);ck('J 88 · 체절 입력 1.15 → 1.2 미만 · SCH10 적합',r.shutUser&&!r.hiPress&&r.pipePressOK);
+r=spkCalc({...base,actualHead:fJ(87).E,shutPress:1.2},[seg({flow:80,dia:200})]);ck('J 87 · 체절 입력 1.20 → 1.2 이상 · SCH10 부적합',r.hiPress&&!r.pipePressOK);
+r=spkCalc({...base,actualHead:fJ(123).E,shutPress:0},[seg({flow:80,dia:200})]);ck('J 123 · 체절 0(미입력) → 정격 1.206 × 1.4 = 1.689',Math.abs(r.Pshut-123*0.00980665*1.4)<1e-12);
 r=spkCalc({...base,actualHead:fJ(123).E,lowHead:1},[seg({flow:80,dia:200})]);ck('T = (123 − 1) × 0.0098 = 1.196 → 이하',!r.overHead);
 r=spkCalc({...base,actualHead:fJ(123).E,lowHead:0},[seg({flow:80,dia:200})]);ck('T = 123 × 0.0098 = 1.206 → 초과',r.overHead);
 // 유속: 가지 6 m/s 경계 — 25A(27.6) 215 L/min = 5.99 / 216 = 6.02

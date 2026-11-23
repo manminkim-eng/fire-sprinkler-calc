@@ -320,7 +320,8 @@ footer.mm-foot{position:relative;z-index:1;border-top:1px solid #e4e9f0;backgrou
 <body>
 <div id="root"></div>
 <script id="spk-engine">
-/* v5.1.0 — 계산 엔진 단일화: 화면 · A4 · 검증(_검증/verify_spk.py)이 같은 spkCalc()를 쓴다 */
+/* v5.1.0 — 계산 엔진 단일화: 화면 · A4 · 검증(_검증/verify_spk.py)이 같은 spkCalc()를 쓴다
+   v6.1.3 (2026-11-24) — 배관 사용압력 체절압력 기준(Pshut, 교차검증 P1) — 수원 · 전양정 · 동력 불변 */
 /* 근거: 스프링클러설비의 화재안전성능기준(NFPC 103) 소방청고시 제2025-25호(2026. 3. 1. 시행) · 화재안전기술기준(NFTC 103) 국립소방연구원공고 제2026-35호(2026. 7. 1. 시행)
          고층건축물의 화재안전기술기준(NFTC 604) 공고 제2023-44호(2023. 12. 20.) · 공동주택의 화재안전기술기준(NFTC 608) 공고 제2026-40호(2026. 7. 1.) */
 var NOZZLE_HEAD   = 10;   /* 헤드 선단 방수압력 0.1 MPa 이상 ≒ 10 m (NFTC 103 2.2.1.10) */
@@ -420,15 +421,18 @@ function spkCalc(sys,segs){
     const Pkw=0.163*M*J*K/N;
     const Php=nextHP(Pkw);
     /* v5.1.0 — 압력 판정(표시 전용 · 계산값 불변)
-       ① 배관 사용압력 S = J × 0.00980665 MPa — 1.2 MPa 이상이면 KS D 3562 · 3583(NFPC 103 제8조①2호 · NFTC 103 2.5.1.2) — 앱 선택지 중 KS D 3562만 적합
+       ① 배관 사용압력 S = 펌프 체절압력(v6.1.3 — 입력값, 없으면 정격 J × 0.00980665 × 1.4) — 1.2 MPa 이상이면 KS D 3562 · 3583(NFPC 103 제8조①2호 · NFTC 103 2.5.1.2) — 앱 선택지 중 KS D 3562만 적합
        ② 최저층 헤드 방수압 T = (J − 최저층 헤드 높이 hL) × 0.00980665 MPa(배관 마찰 미차감 — 보수적) — 1.2 MPa 초과 시 상한(NFTC 103 2.2.1.10) 초과 → 감압 검토
           hStar = J − 1.2 ÷ 0.00980665 : 펌프 기준 이 높이 미만 헤드는 감압 검토 */
     const MPA_M=0.00980665;
-    const Pdis=J*MPA_M; const hiPress=Pdis>=1.2; const pipePressOK=!hiPress||sys.pipeType==="SCH40";
+    /* v6.1.3 (교차검증 2026-11-23 P1) — 배관 사용압력은 체절압력 기준(소방청 법령해석 412390 「배관사용압력[체절압력]」)
+       Pshut = 입력한 펌프 체절압력(MPa) · 입력 없으면 정격 × 1.4(NFPC 103 제5조①5호 · NFTC 103 2.2.1.5 — 체절운전 시 정격토출압력의 140 % 이하) — 1.2 MPa 이상이면 KS D 3562 · 3583 */
+    const Pdis=J*MPA_M; const shutIn=+(sys.shutPress||0); const shutUser=shutIn>0; const Pshut=shutUser?shutIn:Pdis*1.4;
+    const hiPress=Pshut>=1.2; const pipePressOK=!hiPress||sys.pipeType==="SCH40";
     const hL=+(sys.lowHead||0); const Plow=(J-hL)*MPA_M; const overHead=Plow>1.2; const hStar=J-1.2/MPA_M;
     const velOverN=sdets.filter(d=>d.velOver).length;
     return{A,B,Clpm,D,R,Dt,roofEx,E,F,G,I,Jraw,J,N,K,M,Pkw,Php,pCfg,sdets,btype,waterVolPer,nInst,useInst,
-           Pdis,hiPress,pipePressOK,hL,Plow,overHead,hStar,velOverN};
+           Pdis,Pshut,shutUser,hiPress,pipePressOK,hL,Plow,overHead,hStar,velOverN};
 }
 window.SPKENG={calc:spkCalc,PIPE_CONFIG:PIPE_CONFIG,FITTING_EQ:FITTING_EQ,TRANS_TYPE:TRANS_TYPE,BASE_HEAD_TYPES:BASE_HEAD_TYPES};
 </script>
@@ -615,6 +619,7 @@ function FormulaModal({onClose}){
                 <div style={{fontSize:11,color:"#374151",lineHeight:1.85}}>
                   ① <strong>실양정(m)</strong>을 입력합니다 — 펌프 설치 위치에서 최고층 헤드까지의 높이입니다.<br/>
                   ①-1 <strong>최저층 헤드 높이</strong>(펌프 기준, 낮으면 음수)를 넣으면 방수압 상한(1.2 MPa) 판정이 나옵니다.<br/>
+                  ①-2 <strong>펌프 체절압력</strong>(선택)을 넣으면 그 값으로, 비우면 정격 × 1.4로 배관 사용압력(1.2 MPa) 판정을 합니다.<br/>
                   ② <strong>배관 구간</strong>을 추가하여 구분(가지 / 교차·주) · 관경 · 길이 · 관부속 수량을 입력하면 Hazen-Williams 공식으로 마찰손실이 자동 계산됩니다.<br/>
                   ③ 전양정 = (실양정 + 배관손실 + 헤드 환산수두 10m) × 1.1(안전율 — MANMIN 참고값) 후 올림 처리됩니다.<br/>
                   ④ 유속 초과 구간은 <span style={{color:"#dc2626",fontWeight:700}}>⚠ 경고</span>로 자동 표시됩니다(수리계산 시 가지 6 m/s · 그 밖의 배관 10 m/s — 2.5.3.3 단서).
@@ -761,9 +766,9 @@ function FormulaModal({onClose}){
               </div>
               <div className="fml-card">
                 <div style={{fontSize:12,fontWeight:700,color:"#374151",marginBottom:4}}>S · T. 압력 판정 (v5.1.0 — 표시 전용, 계산값 불변)</div>
-                <code className="fml-eq">S = J × 0.0098 [MPa] · T = (J − 최저층 헤드 높이) × 0.0098 [MPa]</code>
+                <code className="fml-eq">S = 체절압력(입력, 없으면 J × 0.0098 × 1.4) [MPa] · T = (J − 최저층 헤드 높이) × 0.0098 [MPa]</code>
                 <div className="fml-note">
-                  S: 배관 사용압력 1.2 MPa 이상이면 KS D 3562 · 3583 (NFPC 103 제8조①2호 · NFTC 103 2.5.1.2)<br/>
+                  S: 배관 사용압력 = 체절압력(소방청 법령해석 412390 · 체절 상한 정격의 140 % — NFPC 103 제5조①5호) — 1.2 MPa 이상이면 KS D 3562 · 3583 (NFPC 103 제8조①2호 · NFTC 103 2.5.1.2) 또는 릴리프밸브로 1.2 MPa 미만 유지<br/>
                   T: 헤드선단 방수압 1.2 MPa 이하 (NFTC 103 2.2.1.10) — 초과 시 감압 검토 · 배관 마찰 미차감 보수적 추정
                 </div>
               </div>
@@ -853,6 +858,7 @@ function App(){
     transType:"1",       // 전달방식
     pipeType:"SCH10",    // 배관 종류
     lowHead:0,           // v5.1.0 — 최저층 헤드 높이(펌프 기준, 압력 상한 판정용)
+    shutPress:0,         // v6.1.3 — 펌프 체절압력 MPa(선택, 0 = 정격 × 1.4)
   });
   const ss=(k,v)=>setSys(s=>({...s,[k]:v}));
 
@@ -1133,9 +1139,15 @@ function App(){
                   )}
                   {!C.pipePressOK&&(
                     <div className="mm-pipe-warn" style={{marginTop:5,fontSize:11,color:"#b91c1c",fontWeight:700,padding:"4px 8px",background:"#fef2f2",borderRadius:6,border:"1px solid #fecaca"}}>
-                      ⚠ 사용압력 {ff(C.Pdis,2)} MPa ≥ 1.2 MPa — KS D 3562 · 3583 사용(NFPC 103 제8조①2호 · NFTC 103 2.5.1.2)
+                      ⚠ 사용압력(체절) {ff(C.Pshut,2)} MPa ≥ 1.2 MPa — KS D 3562 · 3583 사용 또는 릴리프밸브로 1.2 MPa 미만 유지(NFPC 103 제8조①2호 · NFTC 103 2.5.1.2)
                     </div>
                   )}
+                </div>
+                {/* S-1 — v6.1.3 사용압력(체절압력) 판정용 */}
+                <div>
+                  <LabelEl>S-1. 펌프 체절압력 (선택)</LabelEl>
+                  <InpNum val={sys.shutPress||""} onChange={v=>ss("shutPress",Math.max(0,v))} unit="MPa" min={0}/>
+                  <div style={{fontSize:11,color:"#9ca3af",marginTop:4}}>비우면 정격 × 1.4(NFPC 103 제5조①5호 상한) · 배관 사용압력 판정(소방청 법령해석 412390)</div>
                 </div>
               </div>
 
@@ -1316,7 +1328,7 @@ function App(){
               </div>
               {/* v5.1.0 — 압력 판정(표시 전용) */}
               <div className="g-2sm mm-press" style={{marginTop:14}}>
-                <Card label="S. 토출압력 환산 (배관 사용압력)" value={ff(C.Pdis,3)} unit="MPa" formula={`J × 0.0098 = ${C.J} × 0.0098 — ${C.hiPress?"1.2 MPa 이상: KS D 3562 · 3583":"1.2 MPa 미만"} (NFTC 103 2.5.1)`} badge={C.pipePressOK?"배관 적합":"배관 부적합"} bc={C.pipePressOK?"green":"red"}/>
+                <Card label="S. 배관 사용압력 (체절압력)" value={ff(C.Pshut,3)} unit="MPa" formula={`${C.shutUser?"입력 체절압력":`정격 J × 0.0098 = ${ff(C.Pdis,3)} MPa × 1.4`} — ${C.hiPress?"1.2 MPa 이상: KS D 3562 · 3583 또는 릴리프밸브로 1.2 MPa 미만":"1.2 MPa 미만"} (NFTC 103 2.5.1 · 소방청 해석)`} badge={C.pipePressOK?"배관 적합":"배관 부적합"} bc={C.pipePressOK?"green":"red"}/>
                 <Card label="T. 최저층 헤드 방수압 (추정)" value={ff(C.Plow,3)} unit="MPa" formula={`(J − 최저층 ${ff(C.hL,1)} m) × 0.0098 — 배관 마찰 미차감`} badge={C.overHead?"1.2 MPa 초과":"1.2 MPa 이하"} bc={C.overHead?"red":"green"}/>
               </div>
               <div className="mm-prv-note" style={{marginTop:8,fontSize:11,color:"#6b7280",lineHeight:1.6}}>
@@ -1427,7 +1439,7 @@ function App(){
                 <RRow no="G" label="헤드 선단 최소 방수압력 환산수두 (h₃)" value={f3(NOZZLE_HEAD)} unit="m"  basis="0.1 MPa 이상 ⇒ 10 m  (NFPC 103 제5조①9호 · NFTC 103 2.2.1.10)"/>
                 <RRow no="H" label="안전율 (SF = 10%)"                   value={f3(C.I)}        unit="m"  basis={`H = (E+F+G) × 0.1 = ${f3(C.E+C.F+C.G)} × 0.1`}/>
                 <RRow no="I" label="전  양  정"                           value={`${f3(C.Jraw)} → ${C.J}`} unit="m"  basis={`I = E+F+G+H = ${f3(C.Jraw)} m → ${C.J} m (올림 적용) — 안전율 10 % · 올림은 MANMIN 참고값(화재안전기준에 수치 없음)`} hi/>
-                <RRow no="S" label="토출압력 환산 (배관 사용압력)"      value={ff(C.Pdis,3)}          unit="MPa" basis={`S = J × 0.0098 — ${C.hiPress?"1.2 MPa 이상 → KS D 3562 · 3583(NFTC 103 2.5.1.2)":"1.2 MPa 미만"} · ${C.pCfg.shortLabel} ${C.pipePressOK?"적합":"부적합 ⚠"}`}/>
+                <RRow no="S" label="배관 사용압력 (체절압력)"           value={ff(C.Pshut,3)}         unit="MPa" basis={`S = ${C.shutUser?"입력 체절압력":`J × 0.0098 × 1.4 (정격 ${ff(C.Pdis,3)})`} — ${C.hiPress?"1.2 MPa 이상 → KS D 3562 · 3583(NFTC 103 2.5.1.2) 또는 릴리프밸브로 1.2 MPa 미만":"1.2 MPa 미만"} (소방청 해석) · ${C.pCfg.shortLabel} ${C.pipePressOK?"적합":"부적합 ⚠"}`}/>
                 <RRow no="T" label="최저층 헤드 방수압 (추정)"         value={ff(C.Plow,3)}          unit="MPa" basis={`T = (J − 최저층 ${ff(C.hL,1)} m) × 0.0098 — ${C.overHead?"1.2 MPa 초과 → 감압 검토":"1.2 MPa 이하"} (NFTC 103 2.2.1.10)${C.overHead?` · 펌프 기준 ${ff(C.hStar,1)} m 미만 헤드`:""}`}/>
               </RSection>
 
@@ -1519,8 +1531,8 @@ function App(){
               <div style={{padding:13,background:"#f8fafc",borderRadius:8,fontSize:11,color:"#6b7280",border:BD,lineHeight:1.9}}>
                 <b style={{color:"#374151"}}>▣ 적용 법령 및 기준</b><br/>
                 ① 화재안전성능기준 NFPC 103 [소방청고시 제2025-25호, 2025. 12. 24. 일부개정, 시행 2026. 3. 1.]<br/>
-                &nbsp;&nbsp;- 제4조 (수원): ① 기준개수 × 1.6 m³ 이상 · ② 옥상 1/3 이상 / 제5조① (가압송수장치): 3호 전용 · 9호 방수압 0.1 ~ 1.2 MPa · 11호 기준개수 × 80 ℓ/min<br/>
-                &nbsp;&nbsp;- 제8조① (배관): 1.2 MPa 미만 KS D 3507 · 5301(습식) · 3576 · 3595 · 4311 / 1.2 MPa 이상 KS D 3562 · 3583<br/>
+                &nbsp;&nbsp;- 제4조 (수원): ① 기준개수 × 1.6 m³ 이상 · ② 옥상 1/3 이상 / 제5조① (가압송수장치): 3호 전용 · 5호 체절 140 % 이하 · 9호 방수압 0.1 ~ 1.2 MPa · 11호 기준개수 × 80 ℓ/min<br/>
+                &nbsp;&nbsp;- 제8조① (배관): 1.2 MPa 미만 KS D 3507 · 5301(습식) · 3576 · 3595 · 4311 / 1.2 MPa 이상 KS D 3562 · 3583 (사용압력 = 체절압력 — 소방청 법령해석 412390)<br/>
                 ② 화재안전기술기준 NFTC 103 [국립소방연구원공고 제2026-35호, 시행 2026. 7. 1.]<br/>
                 &nbsp;&nbsp;- 2.1.1.1 (수원): 표 2.1.1.1 기준개수 × 1.6 m³ · 2.1.2 옥상수조 1/3(단서 면제) · 2.2.1.10 ~ 2.2.1.12 (방수압 · 방수량)<br/>
                 &nbsp;&nbsp;- 2.5.1 (배관 재질) · 2.5.3.3 단서 (수리계산 시 가지배관 6 m/s · 그 밖의 배관 10 m/s 이하)<br/>
@@ -2191,6 +2203,88 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
     window.addEventListener('afterprint', function () { printing = false; req(); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+</script>
+<!-- 입력값 경고(v6.1.3 · 2026-11-24 교차검증 P2 · P3 — 옥내소화전 v6.1.0 · 옥외소화전 v6.1.3 mm-warn 과 같은 코드, 규칙만 스프링클러용 · 원 출처 정밀검토 B10 · 작업지시서 §25-6-79) — 빈 값 · 0 이 기본값으로 바뀌거나 음수가 그대로 계산에 들어가는 칸에 빨간 테두리와 안내, 계산서 끝에 「입력 확인」 줄. 계산 값은 바꾸지 않음 -->
+<style id="mm-warn-css">
+input[data-mm-warn]{outline:2px solid #d32f2f!important;outline-offset:1px;background:#fff5f5!important;}
+.mm-warn-msg{display:block;flex-basis:100%;width:100%;color:#d32f2f;font-size:11px;font-weight:700;line-height:1.35;margin-top:3px;}
+[data-mm-warn-after]::after{content:attr(data-mm-warn-after);display:block;color:#d32f2f;font-size:11px;font-weight:700;line-height:1.35;margin-top:3px;}
+.mm-warn-note{margin-top:8px;padding:5px 8px;border:1px solid #d32f2f;border-radius:3px;color:#b71c1c;background:#fff5f5;font-size:9pt;line-height:1.5;text-align:left;}
+@media print{input[data-mm-warn]{outline:none!important;background:transparent!important;}.mm-warn-msg{display:none!important;}[data-mm-warn-after]::after{content:none!important;}
+.mm-warn-note{-webkit-print-color-adjust:exact;print-color-adjust:exact;break-inside:avoid;}}
+</style>
+<script id="mm-warn-cfg">
+function byL(t){return A(document.querySelectorAll('label')).filter(function(l){return l.textContent.trim().indexOf(t)===0;}).map(function(l){return l.parentElement.querySelector('input[type=number]');});}
+var A=function(x){return Array.prototype.slice.call(x);},pp=function(el){return el.parentElement&&el.parentElement.parentElement;};
+/* 엔진 값(펌프 토출량 · 정격토출압력) — 화면과 같은 spkCalc */
+function spkNow(){var H=window.__mmHyd,E=window.SPKENG;if(!H||!E||!H.get)return null;var g=H.get();return E.calc(g.sys,g.segs);}
+function segIn(){return A(document.querySelectorAll('.tbl-wrap table input[type=number]')).filter(function(e){return !e.closest('#report-zone');});}
+window.MM_WARN_CFG={react:true,all:true,keep:true,report:'#report-zone',rules:[
+ {sel:function(){return byL('A-1. 설치개수');},name:'A-1. 설치개수',neg:'음수 → 미입력(기준개수) 적용',int:'개',at:pp},
+ {sel:function(){return byL('F. 실양정');},name:'F. 실양정',neg:true,at:pp},
+ {sel:function(){return byL('K-1. 펌프 효율');},name:'K-1. 펌프 효율',at:pp,
+  extra:function(el,n){return n<=10?'10 % 이하 · 빈 값 · 0은 10 %(입력 하한)로 적용 — 제조사 성능곡선 확인':null;}},
+ /* v6.1.3 P1 보조 — 입력한 체절압력이 정격 미만이거나 정격의 140 %(NFPC 103 제5조①5호)를 넘으면 확인 */
+ {sel:function(){return byL('S-1. 펌프 체절압력');},name:'S-1. 펌프 체절압력',neg:true,at:pp,
+  extra:function(el,n){var c=spkNow();if(!c||!(n>0))return null;
+   if(n<c.Pdis-1e-9)return '정격토출압력 '+c.Pdis.toFixed(3)+' MPa 미만 — 확인';
+   if(n>c.Pdis*1.4+1e-9)return '정격의 140 % ('+(c.Pdis*1.4).toFixed(3)+' MPa) 초과 — 펌프 성능(NFPC 103 제5조①5호) 확인';return null;}},
+ {sel:segIn,name:'배관 구간표(직관 · 관부속)',neg:true},
+ /* v6.1.3 교차검증 P3 — 첫 구간(펌프 토출 측) 유량 ↔ 펌프 토출량(엔진 C = A × 80 ℓ/min) */
+ {sel:function(){var tr=document.querySelector('.tbl-wrap tbody tr');var td=tr&&tr.children[2];var e=td&&td.querySelector('select');return e?[e]:[];},name:'배관 구간 1 유량',
+  at:function(el){return el.closest('.tbl-wrap');},
+  extra:function(el,n){var c=spkNow();if(!c)return null;var q=c.Clpm;
+   return n!==q?'첫 구간(펌프 토출 측) 유량 '+n+' ≠ 펌프 토출량 '+q+' ℓ/min(적용 헤드 '+c.A+'개 × 80) — 엔진 토출량은 그대로 — 확인':null;}}]};
+</script>
+<script id="mm-warn-js">
+(function(){
+  var C=window.MM_WARN_CFG; if(!C) return;
+  var A=function(x){return Array.prototype.slice.call(x);};
+  function els(s){try{return (typeof s==='function'?s():A(document.querySelectorAll(s))).filter(Boolean);}catch(e){return [];}}
+  function vis(el){return !!(el.offsetWidth||el.offsetHeight||el.getClientRects().length);}
+  function lbl(el){var p=el;for(var i=0;i<4&&p;i++){p=p.parentElement;if(!p)break;var l=p.querySelector('label,.lbl,.flbl,.field-label');if(l&&!l.contains(el))return l.textContent.replace(/\s+/g,' ').trim().slice(0,30);}return el.id||'입력값';}
+  function judge(r,el){
+    if(r.cond&&!r.cond(el))return null;
+    var v=String(el.value==null?'':el.value).trim();
+    if(v==='')return r.empty!=null?'빈 값 → 기본값 '+r.empty+' 적용':null;
+    if(r.text&&!/^-?\d+(\.\d+)?$/.test(v)){var p=parseFloat(v);return '숫자 외 글자 — '+(isNaN(p)?0:p)+'(으)로 계산';}
+    var n=parseFloat(v);if(isNaN(n))return r.empty!=null?'빈 값 → 기본값 '+r.empty+' 적용':null;
+    if(n<0&&r.neg)return typeof r.neg==='string'?r.neg:'음수 입력 — 확인';
+    if(n===0&&r.zero!=null)return '0 → 기본값 '+r.zero+' 적용';
+    if(r.int&&n%1)return '소수 → '+Math.floor(n)+r.int+' 적용';
+    return r.extra?r.extra(el,n):null;}
+  function show(r,el,m){
+    var t=m?'⚠ '+m:'';
+    if(m){if(el.getAttribute('data-mm-warn')!=='1')el.setAttribute('data-mm-warn','1');}else if(el.hasAttribute('data-mm-warn'))el.removeAttribute('data-mm-warn');
+    if(C.react){var at=r.at?r.at(el):el.parentElement;if(!at)return;
+      if(m){if(at.getAttribute('data-mm-warn-after')!==t)at.setAttribute('data-mm-warn-after',t);}else if(at.hasAttribute('data-mm-warn-after'))at.removeAttribute('data-mm-warn-after');return;}
+    var h=el.closest('.input-sfx,.inp-wrap,.flex-row,.dstp')||el,s=h.nextElementSibling,has=!!(s&&s.classList.contains('mm-warn-msg'));
+    if(m){if(!has){s=document.createElement('span');s.className='mm-warn-msg';h.parentNode.insertBefore(s,h.nextSibling);}if(s.textContent!==t)s.textContent=t;}
+    else if(has)s.parentNode.removeChild(s);}
+  function note(list){
+    var txt=list.length?'⚠ 입력 확인 — 다음 값은 입력 그대로가 아니거나 확인이 필요함(기본값 적용 · 음수 입력): '+list.join(' · '):'';
+    [].concat(C.report).forEach(function(sel){els(sel).forEach(function(box){
+      var n=A(box.children).filter(function(c){return c.classList.contains('mm-warn-note');})[0];
+      if(!txt){if(n)box.removeChild(n);return;}
+      if(!n){n=document.createElement('div');n.className='mm-warn-note';}
+      if(n.textContent!==txt)n.textContent=txt;
+      if(box.lastElementChild!==n)box.appendChild(n);});});}
+  function run(){var list=[];
+    C.rules.forEach(function(r){var es=els(r.sel),got=[];
+      if(!es.length&&C.keep&&r._last){got=r._last;}
+      es.forEach(function(el){
+        var m=null;try{m=(C.all||vis(el))?judge(r,el):null;}catch(e){}
+        show(r,el,m);
+        if(m)got.push((typeof r.name==='function'?r.name(el):(r.name||lbl(el)))+' '+m);});
+      if(es.length)r._last=got;
+      got.forEach(function(s){if(list.indexOf(s)<0)list.push(s);});});
+    note(list);}
+  window.MMWarn={version:'1.0',run:run};
+  var q=function(){setTimeout(run,0);};
+  document.addEventListener('input',q,true);document.addEventListener('change',q,true);document.addEventListener('click',q,true);
+  window.addEventListener('beforeprint',run);
+  setTimeout(run,600);setInterval(run,1000);
 })();
 </script>
 <!-- MM-PROJECT:BEGIN v1.3 -->

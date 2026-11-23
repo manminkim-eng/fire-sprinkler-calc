@@ -3,7 +3,7 @@
 #  · 원문: NFPC 103(제2025-25호) 제4조①② · 제5조①9호 · 11호 · 제8조① / NFTC 103(제2026-35호) 표 2.1.1.1 · 2.1.2 · 2.2.1.10 ~ 12 · 2.5.1 · 2.5.3.3 단서
 #          NFTC 604(제2023-44호) 2.2.1 · 2.2.2 / NFTC 608(제2026-40호) 2.3.1.1
 #  · KS 강관 내경 = 외경 − 2 × 두께 (KS D 3507 · KS D 3562 Sch40) — 이 파일에서 외경 · 두께로 다시 계산
-#  · 압력 판정: 배관 사용압력 = ρgJ(1.2 MPa 이상이면 앱 선택지 중 KS D 3562만 적합) · 최저층 헤드 방수압 = ρg(J − 최저층 높이)(1.2 MPa 초과 → 상한 초과)
+#  · 압력 판정: 배관 사용압력 = 체절압력(v6.1.3 — 입력값, 없으면 ρgJ × 1.4 · 소방청 해석 412390 · NFPC 103 제5조①5호)(1.2 MPa 이상이면 앱 선택지 중 KS D 3562만 적합) · 최저층 헤드 방수압 = ρg(J − 최저층 높이)(1.2 MPa 초과 → 상한 초과)
 #  · 참고값(관부속 상당길이 · K · 안전율 10 % · 올림 · HP 규격 · STS · CPVC 내경)은 앱과 같은 값을 따로 옮겨 적음
 import sys,json,math,random,subprocess,os,tempfile
 html=open(sys.argv[1],encoding='utf-8').read(); N=int(sys.argv[2]) if len(sys.argv)>2 else 50000
@@ -34,19 +34,20 @@ def py(sy,segs):
     P=0.163*(Q/1000)*J*K[sy['transType']]/(sy['pumpEff']/100); hp=P*1.341
     Php=next((h for h in HP if h>=hp), math.ceil(hp/5)*5)
     rg=1000*9.80665/1e6
-    Pdis=J*rg; ok=(Pdis<1.2) or sy['pipeType']=='SCH40'
+    Pdis=J*rg; sh=sy.get('shutPress',0) or 0; Pshut=sh if sh>0 else Pdis*1.4   # v6.1.3 체절압력
+    ok=(Pshut<1.2) or sy['pipeType']=='SCH40'
     Plow=(J-sy['lowHead'])*rg
-    return dict(A=A,Clpm=Q,D=D,R=R,Dt=Dt,F=F,J=J,Pkw=P,Php=Php,Pdis=Pdis,pipePressOK=ok,Plow=Plow,overHead=Plow>1.2,hStar=J-1.2/rg,velOverN=vo)
+    return dict(A=A,Clpm=Q,D=D,R=R,Dt=Dt,F=F,J=J,Pkw=P,Php=Php,Pdis=Pdis,Pshut=Pshut,pipePressOK=ok,Plow=Plow,overHead=Plow>1.2,hStar=J-1.2/rg,velOverN=vo)
 random.seed(20261015); cases=[]
 for _ in range(N):
     sy=dict(baseType=random.choice(list(BASE)),installN=random.choice([0,0,random.randint(1,40)]),buildingFloor=random.randint(1,3),roofEx=random.randint(0,1),
             actualHead=round(random.uniform(3,220),1),transType=random.randint(1,2),pumpDia=random.choice([40,50,65,80,100,125,150]),pumpEff=random.randint(10,80),
-            pipeType=random.choice(list(INNER)),lowHead=round(random.uniform(-15,80),1))
+            pipeType=random.choice(list(INNER)),lowHead=round(random.uniform(-15,80),1),shutPress=random.choice([0,0,round(random.uniform(0.3,2.0),2)]))
     sg=[dict(kind=random.choice(['br','oth']),flow=80*random.randint(1,30),dia=random.choice(list(FIT)),len=round(random.uniform(0,120),1),
              **{k:random.randint(0,6) for k in FK}) for _ in range(random.randint(1,6))]
     cases.append((sy,sg))
 tf=os.path.join(tempfile.gettempdir(),'_spk_cases.json'); json.dump(cases,open(tf,'w'))
-js=os.path.join(tempfile.gettempdir(),'_spk_run.js'); keys=['A','Clpm','D','R','Dt','F','J','Pkw','Php','Pdis','pipePressOK','Plow','overHead','hStar','velOverN']
+js=os.path.join(tempfile.gettempdir(),'_spk_run.js'); keys=['A','Clpm','D','R','Dt','F','J','Pkw','Php','Pdis','Pshut','pipePressOK','Plow','overHead','hStar','velOverN']
 open(js,'w',encoding='utf-8').write("var window=globalThis;\n"+eng+"\nconst cs=require(process.argv[2]);process.stdout.write(JSON.stringify(cs.map(([s,g])=>{const c=spkCalc(s,g);return Object.fromEntries("+json.dumps(keys)+".map(k=>[k,c[k]]))})));")
 E=json.loads(subprocess.check_output(['node',js,tf]))
 bad=[]
