@@ -22,7 +22,7 @@ window.__find=sel=>{if(sel.startsWith('box:'))return __box(sel.slice(4));if(sel.
  for(const s of sel.split(',')){const e=[...document.querySelectorAll(s)].find(__vis);if(e)return e;}return null;};
 window.__EX=${JSON.stringify(EX)};
 window.__run=(k,tab)=>{const e=__EX[k];__mmHyd.setShowFormula(false);__mmHyd.setProj(e.proj);__mmHyd.setSys(e.sys);__mmHyd.setSegs(e.segs);__mmHyd.setTab(tab||0);window.scrollTo(0,0);};
-window.__ex=k=>{const e=__EX[k];const c=SPKENG.calc(e.sys,e.segs);const r={};['A','B','Clpm','D','R','Dt','roofEx','E','F','G','I','Jraw','J','M','N','K','Pkw','Php','waterVolPer','nInst','useInst','Pdis','Pshut','shutUser','hiPress','pipePressOK','hL','Plow','overHead','hStar','velOverN'].forEach(x=>r[x]=c[x]);r.btype=c.btype;
+window.__ex=k=>{const e=__EX[k];const c=SPKENG.calc(e.sys,e.segs);const r={};['A','B','Clpm','D','R','Dt','roofEx','E','F','G','I','Jraw','J','M','N','K','Pkw','Php','waterVolPer','nInst','useInst','Pdis','Pshut','shutUser','hiPress','pipePressOK','pipePressChk','baseFloorMis','hL','Plow','overHead','hStar','velOverN'].forEach(x=>r[x]=c[x]);r.btype=c.btype;
  r.seg=c.sdets.map(d=>({fric:d.fric,fl:d.fl,hl:d.hl,vel:d.vel,vlim:d.vlim,velOver:d.velOver}));return {in:e,R:r};};`;
 const SHOTS=[
  {id:'s01_overview',pre:"__run('A',0)",clip:'viewport',m:[['.tab-bar-wrap','작업 탭 · 매뉴얼'],['.sum-bar','요약 바'],['box:Ⅰ-0','프로젝트 정보'],['box:Ⅰ-1','시스템 파라미터'],['.formula-fab','계산식 안내']]},
@@ -96,7 +96,7 @@ const SHOTS=[
  ex.mobile=await mp.evaluate(()=>({page:document.documentElement.scrollWidth,vw:innerWidth}));
  fs.writeFileSync(path.join(out,'_marks.json'),JSON.stringify(meta,null,1));fs.writeFileSync(path.join(out,'_example.json'),JSON.stringify(ex,null,1));
  const miss=[];Object.entries(meta).forEach(([k,v])=>v.marks.forEach(m=>{if(m.miss)miss.push(k+':'+m.miss);else if(m.x<0||m.y<0||m.x+m.w>100.5||m.y+m.h>100.5||m.w<=0||m.h<=0)miss.push(k+':OUT '+m.label+' '+m.x+','+m.y+','+m.w+','+m.h);}));
- const sh=o=>o&&{A:o.R.A,Q:o.R.Clpm,D:o.R.D,R:o.R.R,Dt:o.R.Dt,F:o.R.F,J:o.R.J,P:o.R.Pkw,HP:o.R.Php,S:o.R.Pdis,Sh:o.R.Pshut,ok:o.R.pipePressOK,T:o.R.Plow,over:o.R.overHead,hs:o.R.hStar,vo:o.R.velOverN};
+ const sh=o=>o&&{A:o.R.A,Q:o.R.Clpm,D:o.R.D,R:o.R.R,Dt:o.R.Dt,F:o.R.F,J:o.R.J,P:o.R.Pkw,HP:o.R.Php,S:o.R.Pdis,Sh:o.R.Pshut,ok:o.R.pipePressOK,chk:o.R.pipePressChk,bfm:o.R.baseFloorMis,T:o.R.Plow,over:o.R.overHead,hs:o.R.hStar,vo:o.R.velOverN};
  console.log(JSON.stringify({A:sh(ex.A),B:sh(ex.B),C:sh(ex.C),mobile:ex.mobile,sizes:Object.fromEntries(Object.entries(meta).map(([k,v])=>[k,v.w+'x'+v.h])),miss,errs:errs.slice(0,15)},null,1));
  await b.close();s.close();
 })();
