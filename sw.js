@@ -1,4 +1,5 @@
 /*
+   v6.1.5 (2026-11-25) — 헤더 고정 — 공통 원본 MM-HEADER v1.1 주입(태블릿 · 데스크톱만 — 폭 768px · 높이 600px 이상, 휴대폰은 고정 없음 · 머리+탭 sticky · 내리면 제목 한 줄+탭으로 접힘 · 다른 sticky 패널 top 보정) — 계산 · 인쇄 불변 · MIN 「추천안대로 승인」 · 「추천안대로 진행해줘」(모바일 제외) · 캐시명 v6.1.5 (종전 v6.1.4)
    v5.1.4 2026-10-31 — 휴대전화 · 터치 화면 단추 · 입력칸 최소 높이 32px · 캐시명 v5.1.4
    v5.1.0 회차 2026-10-15 — NFPC 103(제2025-25호) · NFTC 103(제2026-35호) · NFTC 604 · 608 원문 대조 근거 정정 · 기준개수 표 · 설치개수 · 옥상수조 · KS 강관 내경 · 압력 판정 · 구간별 유속 판정 · 계산 엔진 단일화 · 매뉴얼(/manual/) 캐시 제외
    ═══════════════════════════════════════════════════════════════
@@ -49,7 +50,7 @@ const mmMatch = (req, opt) => caches.keys()
   .then((ks) => ks.reduce((p, k) => p.then((r) => r || caches.open(k).then((c) => c.match(req, opt))), Promise.resolve(undefined)))
   .then((r) => (r && r.type === 'opaque' && req && req.mode === 'cors') ? undefined : r);
 
-const CACHE_VER    = 'v6.1.4';
+const CACHE_VER    = 'v6.1.5';
 const CACHE_NAME   = `manmin-sprinkler-${CACHE_VER}`;
 const STATIC_CACHE = `manmin-sprinkler-static-${CACHE_VER}`;
 
