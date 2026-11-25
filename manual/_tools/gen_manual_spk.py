@@ -7,7 +7,7 @@
      고층건축물의 화재안전기술기준(NFTC 604) 공고 제2023-44호 2.2.1 · 2.2.2 / 공동주택의 화재안전기술기준(NFTC 608) 공고 제2026-40호 2.3.1.1 / 건축법 제2조①19호
    예제 수치는 캡처 때 앱 엔진(window.SPKENG.calc)으로 계산해 기록한 _example.json 에서 가져온다.
    참고값 표(강관 내경)는 앱 index.html 의 spk-engine 을 node 로 읽는다."""
-import os, sys, json, subprocess
+import re, os, sys, json, subprocess
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from manual_engine import fig, T, render, B, MARKS
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -19,11 +19,11 @@ JS = r"""const fs=require('fs');const s=fs.readFileSync(process.argv[1],'utf8');
 const e=s.slice(a,s.indexOf('</script>',a));var window=globalThis;eval(e);console.log(JSON.stringify({PIPE_CONFIG,FITTING_EQ,TRANS_TYPE,PUMP_EFF,BASE_HEAD_TYPES}));"""
 D = json.loads(subprocess.check_output(['node', '-e', JS, APPHTML]))
 
-VER = 'Ver-5.1'
-REL = 'v6.1.4'
-UPD = '2026-11-24'   # v6.1.4 — 고층 기준개수 구분 경고 · 50층 이상 안내 · CPVC 「특례 확인」 · T 「추정」(교차검증 2026-11-23 권장 · 권고)
+VER = 'Ver-6.1'
+REL = 'v' + '.'.join(map(str, max(tuple(map(int, v.split('.'))) for v in re.findall(r'v(6\.\d+\.\d+)', open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'sw.js'), encoding='utf-8').read()))))   # 도구 판 = sw.js 캐시 판(2026-11-25 Ver-6.1 표기 통일)
+UPD = '2026-11-25'   # Ver-6.1 표기 통일(판 이름 · PDF 이름 · 대상 프로그램 판), 내용 변경 없음 — 직전 개정 2026-11-24
 DATE = '2026-10-15'
-PDF = '스프링클러_사용자매뉴얼_Ver-5.1.pdf'
+PDF = '스프링클러_사용자매뉴얼_Ver-6.1.pdf'
 APP_URL = 'https://manminkim-eng.github.io/fire-sprinkler-calc/'
 APP = '스프링클러설비 펌프 용량 계산서'
 NFPC = '스프링클러설비의 화재안전성능기준(NFPC 103) 소방청고시 제2025-25호(2026. 3. 1. 시행)'
@@ -94,7 +94,7 @@ S.append(f"""{EXTRA_CSS}<section class="ch" id="ch0"><h2><span class="n">00</spa
 {K(T([
  ['대상 프로그램', f'{APP} <b>MANMIN {VER}</b>({REL}) — 탭 막대 「📘 매뉴얼」 버튼으로 이 문서가 열립니다'],
  ['접속 주소', f'<a href="{APP_URL}" target="_blank" rel="noopener">manminkim-eng.github.io/fire-sprinkler-calc</a>'],
- ['매뉴얼 판', f'<b>{VER}</b> (화면 표기와 같은 판 번호, 초판 {DATE}) · 개정 {UPD} · 작성 김만민 건축사(㈜대성건축사사무소)'],
+ ['매뉴얼 판', f'<b>{VER}</b> (도구 판 6.1.x와 맞춘 판 번호, 초판 {DATE}) · 개정 {UPD} · 작성 김만민 건축사(㈜대성건축사사무소)'],
  ['내려받기', f'<a href="{PDF}" download>PDF(A4)</a> · <a href="../index.html">{APP} 열기</a>'],
  ['예제', f'본문 그림은 예제 A(익산 업무시설 지상 8층 — 헤드 부착높이 8 m 미만 10개)로 캡처했습니다 — <b>토출량 {A["Clpm"]} L/min · 총 저수량 {f3(A["Dt"])} m³ · 전양정 {A["J"]} m · {A["Php"]:g} HP</b>. 예제 B(35층 아파트 — 고층 · 1.2 MPa) · C(판매시설 — 설치개수 · 유속)는 <a href="#a2">부록 A2</a>'],
  ['근거 법령', f'{LAW} — LawMCP(국가법령정보센터) 원문 대조({DATE}) · 표 2.1.1.1은 원문 PDF 대조'],
@@ -326,8 +326,9 @@ S.append(f"""<section class="ch" id="ch7"><h2><span class="n">부록</span></h2>
 <p>예제 B는 체절압력 {f3(Bx['Pshut'])} MPa로 1.2 MPa 이상이라 KS D 3562를 쓰고, 최저층 헤드 방수압이 1.2 MPa를 넘어 펌프 기준 {f1(Bx['hStar'])} m 미만 헤드의 감압을 검토합니다. 예제 C는 가지 25A 구간 유속이 6 m/s를 넘습니다.</p>
 <h3 id="a3">A3. 버전 변경 내역</h3>
 {K(T([
- [f'Ver-5.1 · v6.1.4 ({UPD})', '교차검증 권고 — 고층 기준개수 구분 확인 · 50층 이상 안내(NFTC 604 2.2.7) · CPVC 「특례 확인」(2.5.2) · T 「(추정)」 — 계산값 불변'],
- [f'Ver-5.1 · v6.1.3 ({UPD})', '교차검증 반영 — 배관 사용압력 체절압력 기준(S-1 입력, 없으면 정격 × 1.4 · 소방청 법령해석 412390) · 입력값 경고 — 수원 · 전양정 · 동력 불변'],
+ [f'Ver-6.1 · {REL} (2026-11-25)', '매뉴얼 판 표기 통일 — Ver-5.1 → Ver-6.1(도구 판 6.1.x와 맞춤) · PDF 이름 「…_Ver-6.1.pdf」 · 대상 프로그램 판 · 작성일 갱신 — 본문 · 계산 · 예제 변경 없음'],
+ ['Ver-6.1 · v6.1.4 (2026-11-24)', '교차검증 권고 — 고층 기준개수 구분 확인 · 50층 이상 안내(NFTC 604 2.2.7) · CPVC 「특례 확인」(2.5.2) · T 「(추정)」 — 계산값 불변'],
+ ['Ver-6.1 · v6.1.3 (2026-11-24)', '교차검증 반영 — 배관 사용압력 체절압력 기준(S-1 입력, 없으면 정격 × 1.4 · 소방청 법령해석 412390) · 입력값 경고 — 수원 · 전양정 · 동력 불변'],
  ['Ver-5.1 · v5.1.12 (2026-11-09)', '「🏢 건물개요」 저장 · 불러오기 — 공사명 · 설계자을(를) 다른 MANMIN 도구와 공유, 파일 내보내기 · 가져오기(공통 원본 MM-PROJECT v1.2, 계산 변경 없음)'],
  [f'Ver-5.1 · v5.1.0 ({DATE})', 'NFPC 103(제2025-25호) · NFTC 103(제2026-35호) · NFTC 604 · 608 원문 대조 근거 정정, 기준개수 표 원문화, 설치개수 · 옥상수조, KS 강관 내경, 압력 판정(1.2 MPa 배관 · 헤드 상한), 구간별 유속 판정, MANMIN 참고값 표기, 계산 엔진 단일화, 탭 막대 「📘 매뉴얼」 · 사용자 매뉴얼(<a href="#s4-8">4-8</a>)'],
  ['Ver-5.0 (2026-09)', 'MANMIN 디자인 통일(헤더 · 탭 · 요약 바 · A4 · JPG 저장), PWA'],
